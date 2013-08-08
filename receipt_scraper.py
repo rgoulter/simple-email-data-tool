@@ -59,6 +59,15 @@ if __name__ == '__main__':
     mail = login_to_email()
     mail.select('INBOX')
     
+    ids = get_email_ids_from_withsubject(mail, "iTunes", "Your receipt")
+    raw = get_email_data_using_id(mail, ids[0])
+    msg = email.message_from_string(raw)
+    hdata = get_html_payload_of_email(msg)
+    #print hdata
+    data = itunes.parse_email_html(hdata)
+    print data
+    
+    """
     # Get purchases from iTunes, Steam and Kobo
     itunes_purchased_items = itunes.scrape_all_data(mail)
     steam_purchased_items = steam.scrape_all_data(mail)
@@ -74,3 +83,4 @@ if __name__ == '__main__':
         for d in all_items:
             print d
             csv_out.writerow(d)
+    """

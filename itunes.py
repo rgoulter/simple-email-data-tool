@@ -31,20 +31,33 @@ def parse_email_html(html_data):
     
     # Now we need to get the songs purchased..
     
+    # Due to older emails having a different format, we need 
+    # to check whether this is new or old.
+    # In older emails, the text at the xpath will read "Unit Price", on newer will read "Type"
+    type_col_header_xpath = "/html/body/table[1]/tbody/tr/td/table[3]/tbody/tr/td[1]/table[1]/tbody/tr[2]/td[3]/font/b"
+    type_col_b = root.xpath(type_col_header_xpath)[0]
+    has_type_column = type_col_b.text == "Type"
+    
     # Each tr
+    #          "/html/body/table[1]/tbody/tr/td/table[3]/tbody/tr/td[1]/table[1]/tbody/tr"
     tr_xpath = "/html/body/table[1]/tbody/tr/td/table[3]/tbody/tr/td[1]/table[1]/tbody/tr"
     rows = root.xpath(tr_xpath)
     
     # Now we want the rows with 4 children (but not the first, which is the titles of the cols
-    items = [row for row in rows if len(row) == 4][1:]
+     
+    items = [row for row in rows if len(row) == (4 if has_type_column else 3)][1:]
     
     result = []
     
     for item in items:
         title = item[0][0].text.strip()
         artist = item[1][0].text.strip()
-        itype = item[2][0].text.strip() #type, e.g. song
-        price = item[3][0].text.strip()
+        if has_type_column:
+            itype = item[2][0].text.strip() #type, e.g. song
+            price = item[3][0].text.strip()
+        else:
+            itype = "iTunes Media"
+            price = item[2][0].text.strip()
         
         result.append((date_str, title, artist, price, itype))
     
