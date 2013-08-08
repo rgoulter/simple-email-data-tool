@@ -50,12 +50,17 @@ def parse_email_html(html_data):
     result = []
     
     for item in items:
-        title = item[0][0].text.strip()
-        artist = item[1][0].text.strip()
         if has_type_column:
+            # Newer Formatting
+            title = item[0][0].text.strip()
+            artist = item[1][0].text.strip()
             itype = item[2][0].text.strip() #type, e.g. song
             price = item[3][0].text.strip()
         else:
+            # Older Formatting.
+            # Significantly lacks information.
+            title = item[1][0].text.strip()
+            artist = ""
             itype = "iTunes Media"
             price = item[2][0].text.strip()
         
