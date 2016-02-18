@@ -17,7 +17,9 @@ def get_gmail_login():
 
 
 def get_email_ids_from_withsubject(imap_server, fromWho, withSubject):
-    status, response = imap_server.search(None, '(FROM "%s")' % fromWho, '(SUBJECT "%s")' % withSubject)
+    status, response = imap_server.search(None,
+                                          '(FROM "%s")' % fromWho,
+                                          '(SUBJECT "%s")' % withSubject)
     return response[0].split()
 
 
