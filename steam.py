@@ -22,7 +22,7 @@ def get_receipt_emails(imap_server):
 def parse_email_html(html_data):
     etree_document = html5lib.parse(html_data, treebuilder="lxml", namespaceHTMLElements=False)
     root = etree_document.getroot()
-    
+
     # Email HTML seems to be somewhat difficult to parse.
     # Find the date of purchase
     order_received_td_xpath = "/html/body/div/table[1]/tbody/tr[last()]/td[2]"
@@ -30,26 +30,26 @@ def parse_email_html(html_data):
     date_rawstr = received_td[0].text #e.g. Tue Jul 16 21:51:26 2013
     date_val = time.strptime(date_rawstr, "%a %b %d %H:%M:%S %Y")
     date_str = time.strftime("%Y/%m/%d", date_val)
-    
+
     # Get the name & author
     # Kindof gonna be annoying to process this..
     # We process the table-rows, until the one which has a hr in it.
     tr_xpath = "/html/body/div/table[1]/tbody/tr[1]"
     rows = root.xpath(tr_xpath)
-    
+
     result = []
-    
+
     for row in rows:
         if len(row[1]) > 0 and row[1][0].tag == "hr":
             break
-        
+
         title = row[0][0][0].text.strip()
         author = ""
         price = row[1].text.strip()
         gtype = "Game"
-        
+
         result.append((date_str, title, author, price, gtype))
-    
+
     return result
 
 
@@ -59,8 +59,8 @@ def scrape_all_data(imap_server):
     for m in emails:
         emsg = email.message_from_string(m)
         hdata = receipt_scraper.get_html_payload_of_email(emsg)
-        
+
         data = parse_email_html(hdata)
         res = res + data
-        
+
     return res
