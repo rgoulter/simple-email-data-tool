@@ -13,9 +13,8 @@ import receipt_scraper
 
 
 
-SEARCH_FROM    = "Kobo"
-SEARCH_SUBJECT = "Your Kobo Order Receipt"
-
+SEARCH_FROM    = "iTunes"
+SEARCH_SUBJECT = "Your receipt"
 
 
 def parse_email_html(html_data):
