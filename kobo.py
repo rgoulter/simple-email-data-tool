@@ -19,6 +19,12 @@ SEARCH_SUBJECT = "Your Kobo Order Receipt"
 
 
 
+# n.b. Kobo has "Purchase History",
+#   https://secure.kobobooks.com/profile/purchasehistory
+# if all you need is a glance/refresher of what you
+# purchased. Can't download-as-CSV, nor will it show
+# more than 100 orders per page.
+
 def parse_email_html(html_data):
     etree_document = html5lib.parse(html_data, treebuilder="lxml", namespaceHTMLElements=False)
     root = etree_document.getroot()
