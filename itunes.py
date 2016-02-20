@@ -8,12 +8,13 @@ from lxml import etree
 import html5lib  # @UnresolvedImport
 import time
 import email
+
 import receipt_scraper
 
 
 
-def get_receipt_emails(imap_server):
-    return receipt_scraper.get_emails_from_withsubject(imap_server, "iTunes", "Your receipt")
+SEARCH_FROM    = "Kobo"
+SEARCH_SUBJECT = "Your Kobo Order Receipt"
 
 
 
@@ -67,16 +68,3 @@ def parse_email_html(html_data):
         result.append((date_str, title, artist, price, itype))
 
     return result
-
-
-def scrape_all_data(imap_server):
-    emails = get_receipt_emails(imap_server)
-    res = []
-    for m in emails:
-        emsg = email.message_from_string(m)
-        hdata = receipt_scraper.get_html_payload_of_email(emsg)
-
-        data = parse_email_html(hdata)
-        res = res + data
-
-    return res

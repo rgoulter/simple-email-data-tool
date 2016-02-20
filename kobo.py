@@ -8,15 +8,16 @@ from lxml import etree
 import html5lib
 import time
 import email
+
 import receipt_scraper
 
 
 
-def get_receipt_emails(imap_server):
-    # Kobo receipts are
-    # from Kobo
-    # with subject "Your Kobo Order Receipt"
-    return receipt_scraper.get_emails_from_withsubject(imap_server, "Kobo", "Your Kobo Order Receipt")
+# e.g. for calling with get_emails_from_withsubject
+SEARCH_FROM    = "Kobo"
+SEARCH_SUBJECT = "Your Kobo Order Receipt"
+
+
 
 def parse_email_html(html_data):
     etree_document = html5lib.parse(html_data, treebuilder="lxml", namespaceHTMLElements=False)
@@ -50,16 +51,3 @@ def parse_email_html(html_data):
     price_str = price_td[0].text
 
     return (date_str, title_str, author_str, price_str, "Book")
-
-
-def scrape_all_data(imap_server):
-    emails = get_receipt_emails(imap_server)
-    res = []
-    for m in emails:
-        emsg = email.message_from_string(m)
-        hdata = receipt_scraper.get_html_payload_of_email(emsg)
-
-        data = parse_email_html(hdata)
-        res.append(data)
-
-    return res

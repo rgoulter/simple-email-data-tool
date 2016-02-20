@@ -7,15 +7,13 @@ from lxml import etree
 import html5lib
 import time
 import email
+
 import receipt_scraper
 
 
 
-def get_receipt_emails(imap_server):
-    # Steam receipts are
-    # from Steam
-    # with subject "Thank you for your purchase
-    return receipt_scraper.get_emails_from_withsubject(imap_server, "Steam", "Thank you for your purchase")
+SEARCH_FROM    = "Steam"
+SEARCH_SUBJECT = "Thank you for your purchase"
 
 
 
@@ -51,16 +49,3 @@ def parse_email_html(html_data):
         result.append((date_str, title, author, price, gtype))
 
     return result
-
-
-def scrape_all_data(imap_server):
-    emails = get_receipt_emails(imap_server)
-    res = []
-    for m in emails:
-        emsg = email.message_from_string(m)
-        hdata = receipt_scraper.get_html_payload_of_email(emsg)
-
-        data = parse_email_html(hdata)
-        res = res + data
-
-    return res

@@ -2,9 +2,7 @@ import imaplib
 import email
 import csv
 
-import kobo
-import itunes
-import steam
+
 
 def get_gmail_login():
     # Return (username, password) tuple to login to gmail via IMAP
@@ -20,6 +18,8 @@ def get_email_ids_from_withsubject(imap_server, fromWho, withSubject):
     status, response = imap_server.search(None,
                                           '(FROM "%s")' % fromWho,
                                           '(SUBJECT "%s")' % withSubject)
+
+    # I'm not entirely sure why this works.
     return response[0].split()
 
 
@@ -27,7 +27,6 @@ def get_email_ids_from_withsubject(imap_server, fromWho, withSubject):
 def get_email_data_using_id(imap_server, email_id):
     status, response = imap_server.fetch(email_id, '(RFC822)')
     return response[0][1]
-
 
 
 
@@ -53,26 +52,23 @@ def get_html_payload_of_email(m):
     if m.is_multipart():
         for part in m.get_payload():
             if(part.get_content_type() == "text/html"):
+                # XXX should save this ... somewhere?
                 return part.get_payload(decode=True)
+            # XXX elif text/plain, dump also
+    # and what if it's not multipart? at least an
+    # "oh, that was unexpected".
 
 
 
-if __name__ == '__main__':
-    mail = login_to_email()
-    mail.select('INBOX')
+def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html):
+    emails = get_emails_from_withsubject(imap_server, searchFrom, searchSubject)
 
-    # Get purchases from iTunes, Steam and Kobo
-    itunes_purchased_items = itunes.scrape_all_data(mail)
-    steam_purchased_items = steam.scrape_all_data(mail)
-    kobo_purchased_items = kobo.scrape_all_data(mail)
+    res = []
+    for m in emails:
+        emsg = email.message_from_string(m)
+        hdata = get_html_payload_of_email(emsg)
 
-    all_items = itunes_purchased_items + steam_purchased_items + kobo_purchased_items
-    all_items.sort()
+        data = parse_email_html(hdata)
+        res.append(data)
 
-    with open('purchased_digital_media.csv','w') as out:
-        csv_out = csv.writer(out)
-        csv_out.writerow(['date','title','creator','price','type'])
-
-        for d in all_items:
-            print d
-            csv_out.writerow(d)
+    return res
