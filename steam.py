@@ -13,7 +13,7 @@ import receipt_scraper
 
 
 SEARCH_FROM    = "Steam"
-SEARCH_SUBJECT = "Thank you for your purchase"
+SEARCH_SUBJECT = "Thank you" # for your purchase" # Steam is inconsistent w/ subject!
 
 
 
@@ -46,6 +46,9 @@ def parse_email_html(html_data):
         price = row[1].text.strip()
         gtype = "Game"
 
+        print "STEAM found '%s' @ '%s'" % (title, price)
+
         result.append((date_str, title, author, price, gtype))
+
 
     return result

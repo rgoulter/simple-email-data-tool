@@ -29,31 +29,83 @@ def parse_email_html(html_data):
     etree_document = html5lib.parse(html_data, treebuilder="lxml", namespaceHTMLElements=False)
     root = etree_document.getroot()
 
-    # Email HTML seems to be somewhat difficult to parse.
-    # Find the date of purchase
-    order_received_td_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table[3]/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[3]"
-    received_td = root.xpath(order_received_td_xpath)
-    date_rawstr = received_td[0].text #DD/MM/YYYY or YYYY-MM-DD, dang
-    date_val = None
-    if "-" in date_rawstr:
-        date_val = time.strptime(" ".join(date_rawstr.split()[:3]), "%Y-%m-%d") # YYYY-MM-DD
-    else:
-        date_val = time.strptime(" ".join(date_rawstr.split()[:3]), "%d/%m/%Y") # DD/MM/YYYY
-    date_str = time.strftime("%Y/%m/%d", date_val)
+    # By inspecting HTML payloads (saved/dumped elsewhere),
+    # (samples taken at points which the scraping threw an exception!),
+    #
+    # It's clear that the format in the emails is close-enough that it's easier
+    # to write a flexible scraper, than to scrape scrictly for slight variations.
+    #
+    # Emails after 2014-Aug (ish) change from:
+    #  <td>BookTitle <span>By AuthorName</span></td>
+    # to:
+    #  <td><a>$BookTitle</a> <span>By $AuthorName</span></td>
+    # Additionally, emails after 2014-Aug (ish) no longer include
+    # a <td>$DateOfPurchase</td>, so, this changes xpath of $Price <td/>
+    #
+    # Emails after 2015-Aug (ish) change the specific xpath to the items table.
+    #
+    # Edge case in my emails is an email (before 2014-Aug) with no <span/>,
+    #  & so no author. Okay.
 
-    # Get the name & author
-    # (This assumes only one item per email, which seems to hold for Kobo).
-    order_title_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table[3]/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]"
-    title_td = root.xpath(order_title_xpath)
-    title_str = title_td[0].text
+    # General formula was
+    #   some_xpath = "/path/to/el"
+    #   some_el = root.xpath(some_xpath) # n.b. this is a list.
+    #   some_str = f(some_el) # some_el[0].text, etc.
 
-    order_author_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table[3]/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/span"
-    author_td = root.xpath(order_author_xpath)
-    author_str = " ".join(author_td[0].text.split()[1:])
+    # TBH, most of the rest is "magic"/hard-coded enough (by nature)
+    # that it's not particularly maintainable.
+    # Scrapers should be fragile.
 
-    # Get the price
-    order_price_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table[3]/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[4]"
-    price_td = root.xpath(order_price_xpath)
-    price_str = price_td[0].text
+    # items_table contains all the <tr/> with order items.
+    # items_table_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table[3]/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]"
+    items_table_xpath = "/html/body/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr/td[2]/table[3]/tbody/tr/td/table[4]"
+    items_table = root.xpath(items_table_xpath)[0]
 
-    return (date_str, title_str, author_str, price_str, "Book")
+    # "/tbody..." vs "tbody..."?
+    item_rows = items_table.xpath("tbody/tr")
+
+    # print "DEBUG Num item rows: ", len(item_rows)
+
+    # For individual <tr/>, return { title, author, price }
+    def item_from_row(tr):
+      # Because it's email, the <tr/> has a table or two inside it. Cool.
+      title_author_td = tr.xpath("td/table/tbody/tr/td/table/tbody/tr/td[2]")
+
+      # print "DEBUG Title Author TD len", len(title_author_td)
+
+      # How to do things like ".getElementsByTag"? :S
+      # Prefer BeautifulSoup for some things?
+
+      a = title_author_td[0].xpath("a")
+
+      if len(a) == 0:
+        title = title_author_td[0].text
+      else:
+        title = a[0].text
+
+
+      # print "DEBUG Title", title
+
+      span = title_author_td[0].xpath("span")
+
+      if len(span) > 0:
+        # Get rid of the "By.."
+        author = " ".join(span[0].text.split()[1:])
+      else:
+        author = None
+
+      # print "DEBUG author ", author
+
+      # Price <td/> is the last one.
+      price_td = tr.xpath("td/table/tbody/tr/td/table/tbody/tr/td")[-1]
+      price = price_td.text
+
+      print "FOUND '%s' by '%s' @ '%s'" % (title, author, price)
+
+      return {
+          "title": title,
+          "author": author,
+          "price": price
+      }
+
+    return [item_from_row(r) for r in item_rows]
