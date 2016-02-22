@@ -32,7 +32,7 @@ def parse_email_html(html_data):
     # Get the name & author
     # Kindof gonna be annoying to process this..
     # We process the table-rows, until the one which has a hr in it.
-    tr_xpath = "/html/body/div/table[1]/tbody/tr[1]"
+    tr_xpath = "/html/body/div/table[1]/tbody/tr"
     rows = root.xpath(tr_xpath)
 
     result = []
