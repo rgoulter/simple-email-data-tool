@@ -1,2 +1,8 @@
 gmail.password
 *.pyc
+
+# My own helper files. Would rather not commit..
+cache/
+sample/
+check_*.py
+notes.txt
