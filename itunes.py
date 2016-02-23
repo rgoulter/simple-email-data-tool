@@ -115,7 +115,7 @@ def parse_email_html_classic(html_data):
             itype = "iTunes Media"
             price = item[2][0].text.strip()
 
-        print "DEBUG iTUNES found '%s' by '%s' [%s] @ '%s'" % (title, artist, itype, price)
+        print "DEBUG iTunes found '%s' by '%s' [%s] @ '%s'" % (title, artist, itype, price)
 
         result.append({
             "date": date_str,

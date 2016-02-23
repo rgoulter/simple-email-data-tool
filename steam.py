@@ -98,7 +98,7 @@ def parse_email_html_fancy(html_data):
     price_xpath = "/html/body/table/tbody/tr[2]/td/table/tbody/tr/td/table/tbody/tr/td[3]"
     prices = root.xpath(price_xpath)
 
-    print "DEBUG # titles, prices", len(titles), len(prices)
+    # print "DEBUG # titles, prices", len(titles), len(prices)
 
     titleprices = zip(titles, prices)
 

@@ -48,7 +48,7 @@ def parse_email_html(html_data):
         # So.. this works.
         price = price_els[0][0].tail
 
-        print "DEBUG Playstation FOUND '%s' @ '%s'" % (title, price)
+        print "DEBUG Playstation found '%s' @ '%s'" % (title, price)
 
         return {
             "title": title,

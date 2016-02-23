@@ -100,7 +100,7 @@ def parse_email_html(html_data):
       price_td = tr.xpath("td/table/tbody/tr/td/table/tbody/tr/td")[-1]
       price = price_td.text
 
-      print "FOUND '%s' by '%s' @ '%s'" % (title, author, price)
+      print "DEBUG Kobo found '%s' by '%s' @ '%s'" % (title, author, price)
 
       return {
           "title": title,
