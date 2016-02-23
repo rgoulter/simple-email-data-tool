@@ -1,6 +1,7 @@
 import kobo
 import itunes
 import steam
+import playstation
 
 from receipt_scraper import login_to_email, scrape_all_data
 
@@ -26,17 +27,23 @@ if __name__ == '__main__':
                                              kobo.SEARCH_FROM,
                                              kobo.SEARCH_SUBJECT,
                                              kobo.parse_email_html,
-                                             "koboz")
-    # steam_purchased_items  = scrape_all_data(mail,
-    #                                          steam.SEARCH_FROM,
-    #                                          steam.SEARCH_SUBJECT,
-    #                                          steam.parse_email_html,
-    #                                          "steamz")
-    # itunes_purchased_items = scrape_all_data(mail,
-    #                                          itunes.SEARCH_FROM,
-    #                                          itunes.SEARCH_SUBJECT,
-    #                                          itunes.parse_email_html,
-    #                                          "itunez")
+                                             "kobo")
+    steam_purchased_items  = scrape_all_data(mail,
+                                             steam.SEARCH_FROM,
+                                             steam.SEARCH_SUBJECT,
+                                             steam.parse_email_html,
+                                             "steam")
+    psn_purchased_items    = scrape_all_data(mail,
+                                             playstation.SEARCH_FROM,
+                                             playstation.SEARCH_SUBJECT,
+                                             playstation.parse_email_html,
+                                             "playstation")
+
+    itunes_purchased_items = []
+
+    for (f, s) in itunes.FROM_SUBJECT_PAIRS:
+      res = scrape_all_data(mail, f, s, itunes.parse_email_html, "itunes")
+      itunes_purchased_items.append(res)
 
     # all_items = itunes_purchased_items + steam_purchased_items + kobo_purchased_items
     # all_items.sort()

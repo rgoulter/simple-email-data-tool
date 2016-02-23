@@ -61,6 +61,10 @@ def get_html_payload_of_email(m):
         for part in m.get_payload():
             if(part.get_content_type() == "text/html"):
                 return part.get_payload(decode=True)
+    elif m.get_content_type() == "text/html":
+      return m.get_payload(decode=True)
+    else:
+      return None
 
 
 
@@ -90,9 +94,11 @@ def dump_email(msg, name = "mail"):
         os.mkdir(cachename)
 
     html_content = get_html_payload_of_email(msg)
-    fn = friendlyname_of_email(msg, name) + ".html"
-    with open(os.path.join(cachename, fn), 'w') as out:
-        out.write(html_content)
+
+    if (html_content != None):
+        fn = friendlyname_of_email(msg, name) + ".html"
+        with open(os.path.join(cachename, fn), 'w') as out:
+            out.write(html_content)
 
     # Dump text/plain also?
 
@@ -161,10 +167,15 @@ def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html, na
         tally(multipart_ct, is_mp)
 
         # Has the message got text/html? text/plain?
-        if any([part.get_content_type() == "text/html" for part in emsg.get_payload()]):
+        if any([part.get_content_type() == "text/html" for part in emsg.get_payload() if emsg.is_multipart()]):
           tally(content_ct, "html")
-        if any([part.get_content_type() == "text/plain" for part in emsg.get_payload()]):
+        if any([part.get_content_type() == "text/plain" for part in emsg.get_payload() if emsg.is_multipart()]):
           tally(content_ct, "plain")
+
+        if not emsg.is_multipart() and emsg.get_content_type() == "text/plain":
+          tally(content_ct, "plain")
+        if not emsg.is_multipart() and emsg.get_content_type() == "text/html":
+          tally(content_ct, "html")
 
         # Date can be had from:
         #   > m.get("Date")
@@ -180,19 +191,22 @@ def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html, na
 
         hdata = get_html_payload_of_email(emsg)
 
-        # XXX try-catch, when catch, output "friendlyname - failed".
-        #     & output data on success.
-        ## data = parse_email_html(hdata)
-        # res.append(data)
+        if (parse_email_html != None):
+            # TODO Should try-catch here?
+            data = parse_email_html(hdata)
+        else:
+            data = []
+
+        res.append(data)
 
     # Output tallies
-    if multipart_ct.get(True, 0) < len(emails):
-      print "Not all emails multipart."
-    else:
-      print "All emails multipart."
+    # if multipart_ct.get(True, 0) < len(emails):
+    #   print "Not all emails multipart. (%d/%d)" % (multipart_ct.get(True, 0), len(emails))
+    # else:
+    #   print "All emails multipart."
 
-    print "# html: %d" % content_ct["html"]
-    print "# plain: %d" % content_ct["plain"]
+    # print "# html: %d" % content_ct.get("html", 0)
+    # print "# plain: %d" % content_ct.get("plain", 0)
 
     # print "Counts for skeletons: " + str(skel_ct.values())
 
