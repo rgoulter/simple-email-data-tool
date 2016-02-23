@@ -1,0 +1,19 @@
+import X
+
+if __name__ == '__main__':
+    # oldest receipt
+    check1 = ("path/to/sample.html", [("title", "$1.00")])
+
+    check_ls = []
+
+    for (html_file, ls_expect) in check_ls:
+      print "Checking ", html_file, " Expecting %d" % len(ls_expect), " items"
+
+      with open(html_file, "r") as f:
+        html_data = f.read()
+        res = X.parse_email_html(html_data)
+
+        # And can check result.
+
+      print
+
