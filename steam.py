@@ -65,7 +65,7 @@ def parse_email_html_classic(html_data):
         title = row[0][0][0].text.strip()
         price = row[1].text.strip()
 
-        print "STEAM found '%s' @ '%s'" % (title, price)
+        print "DEBUG Steam found '%s' @ '%s'" % (title, price)
 
         result.append({
             "date": date_str,
@@ -102,12 +102,16 @@ def parse_email_html_fancy(html_data):
 
     titleprices = zip(titles, prices)
 
-    for (title_td, price_td) in titleprices:
-      title = title_td.text.strip()
-      price = price_td.text.strip()
+    def item_for_tuple(title_td, price_td):
+        title = title_td.text.strip()
+        price = price_td.text.strip()
 
-      print "DEBUG Steam found '%s' @ '%s'" % (title, price)
+        print "DEBUG Steam found '%s' @ '%s'" % (title, price)
 
-    result = []
+        return {
+            "title": title,
+            "price": price
+        }
 
-    return result
+
+    return [item_for_tuple(t,p) for (t,p) in titleprices]
