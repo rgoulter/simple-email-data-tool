@@ -76,7 +76,7 @@ def datetime_str_of_email(msg):
     # This ignores timezone.
     # But... I don't care *that* much about that precision.
     #   YYYY-MM-DD HH:MM:SS
-    return "%4d-%2d-%2d %2d:%2d:%2d" % (year, month, day, h, m, s)
+    return "%04d-%02d-%02d %02d:%02d:%02d" % (year, month, day, h, m, s)
 
 
 
@@ -87,7 +87,7 @@ def date_str_of_email(msg):
     # This ignores timezone.
     # But... I don't care *that* much about that precision.
     #   YYYY-MM-DD
-    return "%4d-%2d-%2d" % (year, month, day)
+    return "%04d-%02d-%02d" % (year, month, day)
 
 
 
