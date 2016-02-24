@@ -4,7 +4,7 @@ import steam
 import playstation
 
 import codecs
-import csv
+import unicodecsv
 
 from receipt_scraper import login_to_email, scrape_all_data
 from receipt_scraper import parse_price
@@ -107,8 +107,8 @@ if __name__ == '__main__':
         for currency in currencies:
             items_for_currency = [item for item in items_for_store if item["currency"] == currency]
 
-            with codecs.open("purchased_%s.%s.csv" % (store, currency), "w", "utf-8") as out:
-              csv_out = csv.writer(out)
+            with open("purchased_%s.%s.csv" % (store, currency), "w") as out:
+              csv_out = unicodecsv.writer(out, encoding="utf-8")
               csv_out.writerow(['date','title','author','amount','currency', 'type'])
 
               for item in items_for_currency:
@@ -117,8 +117,8 @@ if __name__ == '__main__':
 
 
     # Write all items
-    with codecs.open("purchased_all.csv" % (store, currency), "w", "utf-8") as out:
-      csv_out = csv.writer(out)
+    with open("purchased_all.csv", "w") as out:
+      csv_out = unicodecsv.writer(out, encoding="utf-8")
       csv_out.writerow(['date','title','author','amount','currency', 'type', 'store'])
 
       for item in items_for_currency:
