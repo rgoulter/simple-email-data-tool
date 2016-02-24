@@ -4,6 +4,7 @@ import steam
 import playstation
 
 from receipt_scraper import login_to_email, scrape_all_data
+from receipt_scraper import parse_price
 
 
 
@@ -22,28 +23,62 @@ if __name__ == '__main__':
     # wfm.
     mail.select('INBOX')
 
-    # Get purchases from iTunes, Steam and Kobo
+
+    # title, author, price
     kobo_purchased_items   = scrape_all_data(mail,
                                              kobo.SEARCH_FROM,
                                              kobo.SEARCH_SUBJECT,
                                              kobo.parse_email_html,
                                              "kobo")
+    for item in kobo_purchased_items:
+        (amount, cur) = parse_price(item["price"], default_currency = "USD")
+        item["amount"]   = amount
+        item["currency"] = cur
+        item["kind"]     = "book"
+    # title, author, price, date, kind, amount, currency
+
+
+    # item, price
     steam_purchased_items  = scrape_all_data(mail,
                                              steam.SEARCH_FROM,
                                              steam.SEARCH_SUBJECT,
                                              steam.parse_email_html,
                                              "steam")
+    for item in steam_purchased_items:
+        (amount, cur) = parse_price(item["price"])
+        item["amount"]   = amount
+        item["currency"] = cur
+        item["kind"]     = "game"
+    # item, price, date, kind, amount, currency
+
+
+    # item, price
     psn_purchased_items    = scrape_all_data(mail,
                                              playstation.SEARCH_FROM,
                                              playstation.SEARCH_SUBJECT,
                                              playstation.parse_email_html,
                                              "playstation")
+    for item in psn_purchased_items:
+        (amount, cur) = parse_price(item["price"])
+        item["amount"]   = amount
+        item["currency"] = cur
+        item["kind"]     = "game"
+    # item, price, date, kind, amount, currency
 
+
+    # date, title, author, price, kind
+    # title, author, kind, price
     itunes_purchased_items = []
 
-    for (f, s) in itunes.FROM_SUBJECT_PAIRS:
-      res = scrape_all_data(mail, f, s, itunes.parse_email_html, "itunes")
-      itunes_purchased_items.append(res)
+    for (f, s, default_cur) in itunes.FROM_SUBJECT_PAIRS:
+        res = scrape_all_data(mail, f, s, itunes.parse_email_html, "itunes")
+        for item in res:
+            (amount, cur) = parse_price(item["price"], default_currency = default_cur)
+            item["amount"]   = amount
+            item["currency"] = cur
+
+        itunes_purchased_items.append(res)
+    # title, author, kind, price, date, amount, currency
 
     # all_items = itunes_purchased_items + steam_purchased_items + kobo_purchased_items
     # all_items.sort()

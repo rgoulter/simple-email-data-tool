@@ -29,10 +29,10 @@ SEARCH_SUBJECT = "No."
 # have subject "Your receipt from Apple"
 
 FROM_SUBJECT_PAIRS = [
-    ("iTunes", "Your receipt"), # before 2015
-    ("iTunes", "Your invoice"), # Jan 2015 - Jun 2015
-    ("Apple",  "Your invoice"), # June 2015 onwards
-    ("Apple",  "Your receipt from Apple") # Dec 2015 / Jan 2016 (US Store)
+    ("iTunes", "Your receipt", "NZD"), # before 2015
+    ("iTunes", "Your invoice", "SGD"), # Jan 2015 - Jun 2015
+    ("Apple",  "Your invoice", "SGD"), # June 2015 onwards
+    ("Apple",  "Your receipt from Apple", "USD") # Dec 2015 / Jan 2016 (US Store)
 ]
 
 def parse_email_html(html_data):

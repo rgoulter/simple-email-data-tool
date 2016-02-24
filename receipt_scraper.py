@@ -4,6 +4,7 @@ import email.utils
 import csv
 import os
 import os.path
+import re
 from lxml import etree
 import html5lib
 
@@ -65,6 +66,29 @@ def get_html_payload_of_email(m):
       return m.get_payload(decode=True)
     else:
       return None
+
+
+
+# String to output in the CSV
+def datetime_str_of_email(msg):
+    (year, month, day, h, m, s, wd, yd, dst) = email.utils.parsedate(msg.get("Date"))
+
+    # This ignores timezone.
+    # But... I don't care *that* much about that precision.
+    #   YYYY-MM-DD HH:MM:SS
+    return "%4d-%2d-%2d %2d:%2d:%2d" % (year, month, day, h, m, s)
+
+
+
+# String to output in the CSV
+def date_str_of_email(msg):
+    (year, month, day, h, m, s, wd, yd, dst) = email.utils.parsedate(msg.get("Date"))
+
+    # This ignores timezone.
+    # But... I don't care *that* much about that precision.
+    #   YYYY-MM-DD
+    return "%4d-%2d-%2d" % (year, month, day)
+
 
 
 
@@ -143,6 +167,41 @@ def bare_skeleton_of_html(html_data):
 
 
 
+# Kobo        "$1.23"
+# Steam       "1.23 USD"
+# Steam       "1.23 SGD"
+# Steam       "S$1.23"
+# PlayStation "SGD1.23"
+# PlayStation "$1.23"
+# iTunes      "$1.23" (implied NZD)
+# iTunes      "Free"
+# iTunes      "S$ 1.23"
+# iTunes      "$1.23" (implied USD)
+def parse_price(s, default_currency = "USD"):
+    # Remove all spaces
+    s = s.replace(" ", "")
+
+    if s == "Free":
+        amount = "0.00"
+    else:
+        amount = re.search("\d+\.\d+", s).group(0)
+
+    # Look for "NZD", "SGD", "USD" etc.
+    cur_match = re.search("\w\w\w", s)
+    if cur_match != None:
+      currency = cur_match.group(0)
+    elif s.startswith("S$"):
+      # From my emails, only alternate to "implied" is if begins with
+      # "S$"
+      currency = "SGD"
+    else:
+      currency = default_currency
+
+
+    return (amount, currency)
+
+
+
 def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html, name = "mail"):
     # XXX time how long this takes, right?
     emails = get_emails_from_withsubject(imap_server, searchFrom, searchSubject)
@@ -196,6 +255,11 @@ def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html, na
             data = parse_email_html(hdata)
         else:
             data = []
+
+        # Add date, datetime to the results
+        for item in data:
+          item["date"] = date_str_of_email(emsg)
+          item["datetime"] = datetime_str_of_email(emsg)
 
         res.append(data)
 
