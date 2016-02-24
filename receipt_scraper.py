@@ -191,7 +191,7 @@ def parse_price(s, default_currency = "USD"):
         amount = match.group(0)
 
     # Look for "NZD", "SGD", "USD" etc.
-    cur_match = re.search("\w\w\w", s)
+    cur_match = re.search("[A-Z]{3}", s)
     if cur_match != None and s.strip() != "Free":
       currency = cur_match.group(0)
     elif s.startswith("S$"):
