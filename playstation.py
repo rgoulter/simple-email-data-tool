@@ -9,6 +9,8 @@ import receipt_scraper
 
 # e.g. for calling with get_emails_from_withsubject
 SEARCH_FROM    = "PlayStation"
+# "Purchase Confirmation" is for Asia/Pacific,
+# "Thank You For Your Purchase" for the purchase I made from US store.
 SEARCH_SUBJECT = "Purchase Confirmation"
 
 
