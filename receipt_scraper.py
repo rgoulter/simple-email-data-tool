@@ -174,6 +174,7 @@ def bare_skeleton_of_html(html_data):
 # PlayStation "SGD1.23"
 # PlayStation "$1.23"
 # iTunes      "$1.23" (implied NZD)
+#             "S$.98
 # iTunes      "Free"
 # iTunes      "S$ 1.23"
 # iTunes      "$1.23" (implied USD)
@@ -181,10 +182,13 @@ def parse_price(s, default_currency = "USD"):
     # Remove all spaces
     s = s.replace(" ", "")
 
-    if s == "Free":
+    if s.strip() == "Free":
         amount = "0.00"
     else:
-        amount = re.search("\d+\.\d+", s).group(0)
+        match = re.search("\d*\.\d+", s)
+        if match == None:
+          print "What? Unexpected None for: %s" % s
+        amount = match.group(0)
 
     # Look for "NZD", "SGD", "USD" etc.
     cur_match = re.search("\w\w\w", s)
@@ -261,7 +265,7 @@ def scrape_all_data(imap_server, searchFrom, searchSubject, parse_email_html, na
           item["date"] = date_str_of_email(emsg)
           item["datetime"] = datetime_str_of_email(emsg)
 
-        res.append(data)
+        res = res + data
 
     # Output tallies
     # if multipart_ct.get(True, 0) < len(emails):

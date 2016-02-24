@@ -3,6 +3,9 @@ import itunes
 import steam
 import playstation
 
+import codecs
+import csv
+
 from receipt_scraper import login_to_email, scrape_all_data
 from receipt_scraper import parse_price
 
@@ -35,6 +38,7 @@ if __name__ == '__main__':
         item["amount"]   = amount
         item["currency"] = cur
         item["kind"]     = "book"
+        item["store"]    = "kobo"
     # title, author, price, date, kind, amount, currency
 
 
@@ -49,6 +53,7 @@ if __name__ == '__main__':
         item["amount"]   = amount
         item["currency"] = cur
         item["kind"]     = "game"
+        item["store"]    = "steam"
     # item, price, date, kind, amount, currency
 
 
@@ -63,6 +68,7 @@ if __name__ == '__main__':
         item["amount"]   = amount
         item["currency"] = cur
         item["kind"]     = "game"
+        item["store"]    = "playstation"
     # item, price, date, kind, amount, currency
 
 
@@ -76,17 +82,45 @@ if __name__ == '__main__':
             (amount, cur) = parse_price(item["price"], default_currency = default_cur)
             item["amount"]   = amount
             item["currency"] = cur
+            item["store"]    = "itunes"
 
-        itunes_purchased_items.append(res)
+        itunes_purchased_items = itunes_purchased_items + res
     # title, author, kind, price, date, amount, currency
 
-    # all_items = itunes_purchased_items + steam_purchased_items + kobo_purchased_items
-    # all_items.sort()
-    #
-    # with open('purchased_digital_media.csv','w') as out:
-    #     csv_out = csv.writer(out)
-    #     csv_out.writerow(['date','title','creator','price','type'])
-    #
-    #     for d in all_items:
-    #         print d
-    #         csv_out.writerow(d)
+
+    all_items = kobo_purchased_items + steam_purchased_items + psn_purchased_items + itunes_purchased_items
+
+    stores = set(item["store"] for item in all_items)
+
+    print "DEBUG stores: ", stores
+
+    # Segregate by Store, Currency, into indiv. CSV files.
+
+    for store in stores:
+        items_for_store = [item for item in all_items if item["store"] == store]
+
+        # segregate by Currency
+        currencies = set(item["currency"] for item in items_for_store)
+
+        print "DEBUG currencies for Store '%s': " % store, currencies
+
+        for currency in currencies:
+            items_for_currency = [item for item in items_for_store if item["currency"] == currency]
+
+            with codecs.open("purchased_%s.%s.csv" % (store, currency), "w", "utf-8") as out:
+              csv_out = csv.writer(out)
+              csv_out.writerow(['date','title','author','amount','currency', 'type'])
+
+              for item in items_for_currency:
+                row = [item["date"], item["title"], item.get("author", ""), item["amount"], item["currency"], item["kind"]]
+                csv_out.writerow(row)
+
+
+    # Write all items
+    with codecs.open("purchased_all.csv" % (store, currency), "w", "utf-8") as out:
+      csv_out = csv.writer(out)
+      csv_out.writerow(['date','title','author','amount','currency', 'type', 'store'])
+
+      for item in items_for_currency:
+        row = [item["date"], item["title"], item.get("author", ""), item["amount"], item["currency"], item["kind"], item["store"]]
+        csv_out.writerow(row)
