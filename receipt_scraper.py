@@ -192,7 +192,7 @@ def parse_price(s, default_currency = "USD"):
 
     # Look for "NZD", "SGD", "USD" etc.
     cur_match = re.search("\w\w\w", s)
-    if cur_match != None:
+    if cur_match != None and s.strip() != "Free":
       currency = cur_match.group(0)
     elif s.startswith("S$"):
       # From my emails, only alternate to "implied" is if begins with
