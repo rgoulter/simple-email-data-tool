@@ -1,5 +1,6 @@
 gmail.password
 *.pyc
+*.db
 *.mbox
 
 # My own helper files. Would rather not commit..
