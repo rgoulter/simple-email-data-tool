@@ -70,19 +70,36 @@ if __name__ == '__main__':
   print('building list of tuples of emails')
   email_tuples = sorted((email_of_from(m['From']), parse(m['Date']), m['Subject']) for m in mbox.itervalues())
 
-  for (e, d, s) in email_tuples:
-    print("email: %s %s %s" % (e, d, s))
+  # for (e, d, s) in email_tuples:
+  #   print("email: %s %s %s" % (e, d, s))
 
   print("%d emails in mbox" % (len(email_tuples)))
 
   # load mbox, summarise processed / not.
 
-  # conn = sqlite3.connect('receipts.db')
+  print('connecting to DB')
+  conn = sqlite3.connect('receipts.db')
 
-  # EMAILS: 
+  c = conn.cursor()
+
+  c.execute('SELECT * FROM emails')
+  rows = c.fetchall()
+
+  print("%d rows loaded from DB" % (len(rows)))
+
+  # EMAILS:
   # XXX: Fetch all 'emails' (and count of those emails with receipts) from DB
   # XXX: Count/WARN about emails in DB that are in DB but not in mbox
-  # XXX: insert all email tuples into DB
+
+  # Insert all email tuples into DB
+  # (DB has UNIQUE constraint on (date, from_email, subject))
+  for (email, dt, subj) in email_tuples:
+    domain = email.split('@')[1]
+  c.executemany('''
+    INSERT OR IGNORE INTO emails (date, from_host, from_email, subject)
+    VALUES (?, ?, ?, ?)
+  ''', [(dt.isoformat(), email.split('@')[1], email, subj) for (email, dt, subj) in email_tuples if True])
+  conn.commit()
 
 
   # XXX: emails which aren't recorded (with items) in the DB:
@@ -108,3 +125,4 @@ if __name__ == '__main__':
   #   for a handful of emails (good for "3 emails" or whatever)
 
   # - go from: smallest (with manual), to largest (which benefit from parser)
+  conn.close()
