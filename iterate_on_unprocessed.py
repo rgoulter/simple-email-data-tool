@@ -68,41 +68,51 @@ if __name__ == '__main__':
   mbox = mailbox.mbox('receipts.mbox')
 
   print('building list of tuples of emails')
-  email_tuples = sorted((email_of_from(m['From']), parse(m['Date']), m['Subject']) for m in mbox.itervalues())
+  tuple_of_mail = lambda m: (email_of_from(m['From']), parse(m['Date']), m['Subject'])
+  mbox_email_tuples = sorted(tuple_of_mail(m) for m in mbox.itervalues())
 
-  # for (e, d, s) in email_tuples:
+  # dict from (email, date, subj) -> Message
+  mbox_email_dict = dict((tuple_of_mail(m), m) for m in mbox.itervalues())
+
+  # for (e, d, s) in mbox_email_tuples:
   #   print("email: %s %s %s" % (e, d, s))
 
-  print("%d emails in mbox" % (len(email_tuples)))
+  print("%d emails in mbox" % (len(mbox_email_tuples)))
 
   # load mbox, summarise processed / not.
 
   print('connecting to DB')
   conn = sqlite3.connect('receipts.db')
 
+  # 'SYNC' EMAILS BETWEEN MBOX AND DB:
+  # 1. fetch emails from DB
   c = conn.cursor()
-
-  c.execute('SELECT * FROM emails')
+  c.execute('SELECT from_email, date, subject, receipt_id FROM emails')
   rows = c.fetchall()
 
   print("%d rows loaded from DB" % (len(rows)))
 
-  # EMAILS:
-  # XXX: Fetch all 'emails' (and count of those emails with receipts) from DB
-  # XXX: Count/WARN about emails in DB that are in DB but not in mbox
+  # dict from (email, date, subj) -> Message
+  db_email_dict = dict(((email, parse(date), subject), fk) for (email, date, subject, fk) in rows)
+
+  # Count/WARN about emails in DB that are in DB but not in mbox
+  if mbox_email_dict.keys() - db_email_dict.keys() == set():
+    print("INFO: all mbox emails are in DB already")
+  # XXX: other set comparisons/info
 
   # Insert all email tuples into DB
   # (DB has UNIQUE constraint on (date, from_email, subject))
-  for (email, dt, subj) in email_tuples:
+  for (email, dt, subj) in mbox_email_tuples:
     domain = email.split('@')[1]
   c.executemany('''
     INSERT OR IGNORE INTO emails (date, from_host, from_email, subject)
     VALUES (?, ?, ?, ?)
-  ''', [(dt.isoformat(), email.split('@')[1], email, subj) for (email, dt, subj) in email_tuples if True])
+  ''', [(dt.isoformat(), email.split('@')[1], email, subj) for (email, dt, subj) in mbox_email_tuples if True])
   conn.commit()
 
-
-  # XXX: emails which aren't recorded (with items) in the DB:
+  # TO-PROCESS:
+  # - emails which weren't in DB
+  # - emails in DB which don't have receipt FK
 
   # XXX:
   # extract text/html, text/plain from the messages
