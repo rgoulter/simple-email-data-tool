@@ -2,6 +2,10 @@ gmail.password
 *.pyc
 *.db
 *.mbox
+dump/
+
+# TBH not great
+*.sql
 
 # My own helper files. Would rather not commit..
 cache/

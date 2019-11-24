@@ -1,3 +1,4 @@
+import jinja2
 import mailbox
 import os
 import re
@@ -48,19 +49,38 @@ def dump_email_payloads(m):
 
   filename = filename_for_mail(m)
   payloads = plaintext_payloads_of_mail(m)
+  filenames = {}
 
   if 'text/html' in payloads:
     payload = payloads['text/html']
-    f = open(dirname + filename + ".html", "wb")
+    filenames['text/html'] = dirname + filename + ".html"
+    f = open(filenames['text/html'], "wb")
     f.write(payload)
     f.close()
 
   if 'text/plain' in payloads:
     payload = payloads['text/plain']
-    f = open(dirname + filename + ".txt", "wb")
+    filenames['text/plain'] = dirname + filename + ".txt"
+    f = open(filenames['text/plain'], "wb")
     f.write(payload)
     f.close()
 
+  return filenames
+
+def sql_for_manual_input(from_email, date, subject, plaintext = None, html = None):
+  templateLoader = jinja2.FileSystemLoader(searchpath=".")
+  templateEnv = jinja2.Environment(loader=templateLoader)
+  template = templateEnv.get_template("manual_template.sql")
+
+  templateVars = {
+    "from_email": from_email,
+    "date": date.isoformat(),
+    "subject": subject,
+    "plaintext": plaintext,
+    "html": html,
+  }
+
+  return template.render(templateVars)
 
 
 if __name__ == '__main__':
@@ -114,25 +134,48 @@ if __name__ == '__main__':
   # - emails which weren't in DB
   # - emails in DB which don't have receipt FK
 
-  # XXX:
-  # extract text/html, text/plain from the messages
-  #   N.B., some emails have mimetype text/plain, text/html or maybe multipart/mixed
-  #     some multipart/mixed have payloads with multipart/alternative,
-  #     and so the text/html (or text/plain) is nested (somewhere?) in this.
+  domains = set(e.split('@')[1] for (e, d, s) in mbox_email_dict.keys())
 
-  # XXX:
-  # - dump the payload in a friendly format.
-  #   - dump `text/html` part HTML in some dir structure
-  #   - dump the text same way;
+  # "Processed" = has `receipt` + `items` in the DB.
+  # :: domain -> [(email, date, subject)]
+  tuples_per_domain = dict((d, [(e, dt, s) for (e, dt, s) in mbox_email_tuples if e.split('@')[1] == d])
+                           for d
+                           in domains)
 
-  # TODO:
-  # - try parsing it for each case; input with 'by=parser' or whatever
-  #   for successful cases
+  sorted_tuples_per_domain = sorted(tuples_per_domain.items(),
+                                    key=lambda t: len(t[1]))
 
-  # "For the stuff which didn't succeed":
+  for (domain, tuples) in sorted_tuples_per_domain:
+    # "Processed" = has "receipt"; so its `fk` isn't `None`.
+    processed_tuples = [(e, dt, s) for (e, dt, s) in tuples if db_email_dict.get((e, dt, s), None) != None]
+    unprocessed_tuples = [(e, dt, s) for (e, dt, s) in tuples if db_email_dict.get((e, dt, s), None) == None]
 
-  # - generate SQL INSERT for what it would take to input receipts/items
-  #   for a handful of emails (good for "3 emails" or whatever)
+    print("%s has %d/%d emails processed" % (domain, len(processed_tuples), len(tuples)))
 
-  # - go from: smallest (with manual), to largest (which benefit from parser)
+    # TODO: try scrapers on the unprocessed; use successful results
+
+    if len(unprocessed_tuples) > 0:
+      # For the unprocessed which fail scraping:
+      if len(unprocessed_tuples) <= 12:
+        # If only a handful of emails (12 or less), manually output an SQL file
+        # to input receipt/items into the DB (and extract all plaintext/html
+        sql = []
+        for (e, dt, s) in unprocessed_tuples:
+          m = mbox_email_dict[(e, dt, s)]
+
+          filenames = dump_email_payloads(m)
+          sql.append(sql_for_manual_input(e,
+                                          dt,
+                                          s,
+                                          plaintext = filenames.get('text/plain', None),
+                                          html = filenames.get('text/html', None)))
+
+        f = open(domain + ".sql", "w")
+        payload = "\n\n\n".join(sql)
+        f.write(payload)
+        f.close()
+      else:
+        # Otherwise, output the plaintext/html of the first email
+        pass
+
   conn.close()
