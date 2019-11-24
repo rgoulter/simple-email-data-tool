@@ -24,5 +24,7 @@ CREATE TABLE IF NOT EXISTS items
   id INT PRIMARY KEY,
   description TEXT,
   amount DECIMAL(10,2) NOT NULL,
-  currency TEXT NOT NULL
+  currency TEXT NOT NULL,
+  receipt_id INT,
+  FOREIGN KEY (receipt_id) REFERENCES receipts(id)
 );
