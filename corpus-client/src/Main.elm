@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 
+import Html as H
 import Html exposing (Html, div, text, select, option, node)
 import Html.Attributes exposing (class, type_)
 import Html.Events exposing (onClick)
@@ -107,12 +108,70 @@ styledView model =
       div [] [viewSelectEmails emails]
 
 
+{-
+  A bulma message with 'danger' colours.
+
+  The messages's header is the given title.
+
+  The message's body is filled with the given contents.
+
+  See: https://bulma.io/documentation/components/message/
+-}
+bulmaDangerMessage title contents =
+  let
+    messageHeader =
+      H.div
+        [class "message-header"]
+        [H.p [] [text title]]
+    messageBody =
+      H.div
+       [class "message-body"]
+       contents
+  in
+    H.article
+      [class "message", class "is-danger"]
+      [messageHeader, messageBody]
+
+
+
+{-
+  See: https://bulma.io/documentation/layout/container/
+-}
+bulmaCentered html =
+  div [class "container"] html
+
+
 viewErrorMessage message =
-  div [class "error"] [text (String.concat ["There was an error:", message])]
+  let
+    bulmaMessage =
+      bulmaDangerMessage
+        "Error"
+        [text (String.concat ["There was an error: ", message])]
+  in
+  div [class "error"] [bulmaMessage]
 
 
+{-
+  Modal displaying "loading" above a blank client.
+
+  Used when a GET request is loading.
+-}
 viewLoading =
-  div [class "loading"] [text "Loading..."]
+  let
+    blankPage = viewPage []
+    loadingModal =
+      div
+        [class "modal", class "is-active"]
+        [ div [class "modal-background"] []
+        , div
+            [class "modal-content"]
+            [ div
+               [class "loading", class "is-size-1", class "has-text-light"]
+               [text "Loading"]
+            ]
+        ]
+  in
+  div [] [loadingModal, blankPage]
 
 
 viewSelectEmails emails =
@@ -121,6 +180,9 @@ viewSelectEmails emails =
    in
    div [class "select"] [ select [] options]
 
+
+viewPage emails =
+  bulmaCentered [viewSelectEmails emails]
 
 
 -- HTTP

@@ -20,7 +20,13 @@ import Url.Parser exposing ((<?>), (</>))
 import Url.Parser as Url
 import Url.Parser.Query as Query
 
-import Main exposing (viewErrorMessage, viewLoading, viewSelectEmails, withStyle)
+import Main exposing
+  ( bulmaCentered
+  , viewErrorMessage
+  , viewLoading
+  , viewSelectEmails
+  , withStyle
+  )
 
 
 
@@ -115,5 +121,8 @@ viewComponents components =
 
 viewComponent component =
   case component of
-    "error" -> viewErrorMessage "example error"
+    "error" -> bulmaCentered [viewErrorMessage "example error"]
+    "emails" ->
+      bulmaCentered [viewSelectEmails ["foo@bar.com", "bar@baz.com", "baz@foo.com"]]
+    "loading" -> viewLoading
     _ -> div [] [text (String.concat ["Unknown component: ", component])]
