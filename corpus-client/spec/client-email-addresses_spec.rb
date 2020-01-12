@@ -31,12 +31,44 @@ feature "client displays email-address" do
     Process.kill('KILL', elm_server_pid)
   end
 
+  def run_sinatra(example_name)
+    port = 8901  # hardcoded in the Elm client
+
+    puts "running sinatra (#{example_name}) on port #{port}"
+    sinatra_src = "spec/zoo/#{example_name}.rb"
+
+    throw "bad sinatra example_name; could not find: #{sinatra_src}" unless File.file? sinatra_src
+
+    tmp_out = Tempfile.new("rspec-sinatra-out")
+    tmp_err = Tempfile.new("rspec-sinatra-err")
+    server_pid = Process.spawn(
+      "ruby #{sinatra_src} -p #{port}",
+      out: tmp_out.path,
+      err: tmp_err.path
+    )
+
+    yield
+  ensure
+    puts "killing sinatra (#{example_name}) port=#{port}; pid=#{server_pid}"
+    Process.kill('KILL', server_pid) if server_pid
+  end
+
+  # SEE: /spec/zoo/<example>.rb
   context "when /email-addresses returns successfully" do
-    # TODO: SERVE happy-path (run sinatra)
+    around(:example) do |example|
+      run_sinatra("email-addresses_happy", &example)
+    end
+
     it "shows the email-addresses" do
+      # ASSEMBLE
       visit CLIENT_PATH
 
-      expect(page).to have_selector('option')
+      # ASSERT
+      options = all('option')
+      options_text = options.map(&:text)
+
+      expected_emails = ['foo1@bar.com', 'foo2@bar.com', 'foo3@baz.com']
+      expect(options_text).to eql(expected_emails)
     end
   end
 end
