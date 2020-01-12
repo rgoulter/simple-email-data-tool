@@ -83,4 +83,20 @@ feature "client displays email-address" do
       expect(options_text).to eql(expected_emails)
     end
   end
+
+  context "when /email-addresses returns successfully, SLOWLY" do
+    around(:example) do |example|
+      run_sinatra("email-addresses_happy_slow", &example)
+    end
+
+    it "shows text 'loading'" do
+      # ASSEMBLE
+      visit CLIENT_PATH
+
+      # ASSERT
+      error = find('div.loading')
+
+      expect(error.text.downcase).to include("loading")
+    end
+  end
 end

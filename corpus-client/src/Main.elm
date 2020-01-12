@@ -99,7 +99,7 @@ styledView model =
       div [class "error"] [text (String.concat ["There was an error:", message])]
 
     Loading ->
-      text "Loading..."
+      div [class "loading"] [text "Loading..."]
 
     Success emails ->
       div [] [viewSelectEmails emails]
