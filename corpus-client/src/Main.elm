@@ -57,8 +57,17 @@ update msg model =
         Ok emails ->
           (Success emails, Cmd.none)
 
-        Err _ ->
-          (Failure "An error occurred", Cmd.none)
+        Err error ->
+          let
+            errorMessage =
+              case error of
+                Http.BadUrl url -> String.concat ["Bad Url: ", url]
+                Http.Timeout -> "Request timed out"
+                Http.NetworkError -> "Network error"
+                Http.BadStatus statusCode -> String.concat ["Bad status code: ", String.fromInt statusCode]
+                Http.BadBody message -> String.concat ["Bad body:", message]
+          in
+          (Failure (String.concat ["GET /email-addresses failed: ", errorMessage]), Cmd.none)
 
 
 
@@ -87,7 +96,7 @@ styledView : Model -> Html Msg
 styledView model =
   case model of
     Failure message ->
-      div [] [text (String.concat ["There was an error:", message])]
+      div [class "error"] [text (String.concat ["There was an error:", message])]
 
     Loading ->
       text "Loading..."

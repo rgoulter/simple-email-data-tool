@@ -53,6 +53,18 @@ feature "client displays email-address" do
     Process.kill('KILL', server_pid) if server_pid
   end
 
+  context "when server not running" do
+    it "shows a network error occurred" do
+      # ASSEMBLE
+      visit CLIENT_PATH
+
+      # ASSERT
+      error = find('div.error', wait: 15)
+
+      expect(error.text.downcase).to include("network error")
+    end
+  end
+
   # SEE: /spec/zoo/<example>.rb
   context "when /email-addresses returns successfully" do
     around(:example) do |example|
