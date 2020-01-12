@@ -83,26 +83,36 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> Html Msg
-view model =
+withStyle html =
   div []
   [ node "style" [type_ "text/css"]
     [text "@import url(https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css)"]
-  , (styledView model)
+  , html
   ]
+
+
+view : Model -> Html Msg
+view model =
+  withStyle (styledView model)
 
 
 styledView : Model -> Html Msg
 styledView model =
   case model of
-    Failure message ->
-      div [class "error"] [text (String.concat ["There was an error:", message])]
+    Failure message -> viewErrorMessage message
 
-    Loading ->
-      div [class "loading"] [text "Loading..."]
+    Loading -> viewLoading
 
     Success emails ->
       div [] [viewSelectEmails emails]
+
+
+viewErrorMessage message =
+  div [class "error"] [text (String.concat ["There was an error:", message])]
+
+
+viewLoading =
+  div [class "loading"] [text "Loading..."]
 
 
 viewSelectEmails emails =
