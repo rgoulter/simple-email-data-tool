@@ -66,12 +66,12 @@ feature "client displays email-address" do
   end
 
   # SEE: /spec/zoo/<example>.rb
-  context "when /email-addresses returns successfully" do
+  context "when /emails returns successfully" do
     around(:example) do |example|
-      run_sinatra("email-addresses_happy", &example)
+      run_sinatra("emails_happy", &example)
     end
 
-    it "shows the email-addresses" do
+    it "shows the emails" do
       # ASSEMBLE
       visit CLIENT_PATH
 
@@ -79,14 +79,17 @@ feature "client displays email-address" do
       options = all('option')
       options_text = options.map(&:text)
 
-      expected_emails = ['foo1@bar.com', 'foo2@bar.com', 'foo3@baz.com']
+      expected_emails =
+        ["2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar",
+         "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar",
+         "2019-01-01T12:02:00+0000 foo3@baz.com: Foo3 Bar"]
       expect(options_text).to eql(expected_emails)
     end
   end
 
-  context "when /email-addresses returns successfully, SLOWLY" do
+  context "when /emails returns successfully, SLOWLY" do
     around(:example) do |example|
-      run_sinatra("email-addresses_happy_slow", &example)
+      run_sinatra("emails_happy_slow", &example)
     end
 
     it "shows text 'loading'" do

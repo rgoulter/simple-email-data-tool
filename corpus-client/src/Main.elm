@@ -9,7 +9,7 @@ import Html.Events exposing (onClick)
 
 import Http
 
-import Json.Decode exposing (Decoder, field, list, string)
+import Json.Decode exposing (Decoder, field, list, map3, string)
 
 
 
@@ -31,12 +31,19 @@ main =
 type Model
   = Failure String
   | Loading
-  | Success (List String)
+  | Success (List Email)
+
+
+type alias Email =
+  { from : String
+  , datetime : String
+  , subject : String
+  }
 
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Loading, getEmailAddresses)
+  (Loading, getEmails)
 
 
 
@@ -44,16 +51,16 @@ init _ =
 
 
 type Msg
-  = FetchEmailAddresses
-  | GotEmailAddresses (Result Http.Error (List String))
+  = FetchEmails
+  | GotEmails (Result Http.Error (List Email))
 
 
 update msg model =
   case msg of
-    FetchEmailAddresses ->
-      (Loading, getEmailAddresses)
+    FetchEmails ->
+      (Loading, getEmails)
 
-    GotEmailAddresses result ->
+    GotEmails result ->
       case result of
         Ok emails ->
           (Success emails, Cmd.none)
@@ -176,7 +183,9 @@ viewLoading =
 
 viewSelectEmails emails =
    let
-     options = List.map (\e -> option [] [text e]) emails
+     option_from_email = \{ from, datetime, subject } ->
+       option [] [text (datetime ++ " " ++ from ++ ": " ++ subject)]
+     options = List.map option_from_email emails
    in
    div [class "select"] [ select [] options]
 
@@ -188,24 +197,33 @@ viewPage emails =
 -- HTTP
 
 
-getEmailAddresses : Cmd Msg
-getEmailAddresses =
+getEmails : Cmd Msg
+getEmails =
   Http.get
-    { url = "http://localhost:8901/email-addresses"
-    , expect = Http.expectJson GotEmailAddresses emailsDecoder
+    { url = "http://localhost:8901/emails"
+    , expect = Http.expectJson GotEmails emailsDecoder
     }
 
 {-
   e.g. of response:
     {
       "status": "success",
-      "emails": [
-        "foo1@bar.com",
-        "foo2@bar.com",
-        "foo3@baz.com"
+      emails: [
+        {
+          from: "foo1@bar.com",
+          date: "2019-01-01T12:00:00+0000",
+          subject: "Foo Bar",
+        },
       ]
     }
 -}
-emailsDecoder : Decoder (List String)
+emailsDecoder : Decoder (List Email)
 emailsDecoder =
-  field "emails" (list string)
+  field "emails" (list emailDecoder)
+
+emailDecoder : Decoder Email
+emailDecoder =
+  map3 Email
+      (field "from" string)
+      (field "datetime" string)
+      (field "subject" string)
