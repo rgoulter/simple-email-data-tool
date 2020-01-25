@@ -5,7 +5,7 @@ require 'rspec'
 
 require 'tempfile'
 
-Capybara.default_driver = :selenium_chrome
+Capybara.default_driver = :selenium
 
 ELM_REACTOR_PORT=8900
 
