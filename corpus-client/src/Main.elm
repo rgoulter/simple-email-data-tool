@@ -1,15 +1,20 @@
 module Main exposing (..)
 
+import Array exposing (Array)
+import Array
+
 import Browser
 
 import Html as H
+import Html.Attributes as A
 import Html exposing (Html, div, text, select, option, node)
 import Html.Attributes exposing (class, type_)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 
 import Http
 
-import Json.Decode exposing (Decoder, field, list, map3, string)
+import Json.Decode as Decode
+import Json.Decode exposing (Decoder, array, field, int, map4, string)
 
 
 
@@ -25,19 +30,28 @@ main =
     }
 
 
+
+
 -- MODEL
+
+
+type alias Emails =
+  { selected : Int
+  , emails : Array Email
+  }
 
 
 type Model
   = Failure String
   | Loading
-  | Success (List Email)
+  | Success Emails
 
 
 type alias Email =
   { from : String
   , datetime : String
   , subject : String
+  , timestamp : Int
   }
 
 
@@ -47,12 +61,15 @@ init _ =
 
 
 
+
 -- UPDATE
 
 
 type Msg
   = FetchEmails
-  | GotEmails (Result Http.Error (List Email))
+  | GotEmails (Result Http.Error (Array Email))
+  | Noop
+  | SelectEmail Int
 
 
 update msg model =
@@ -63,7 +80,8 @@ update msg model =
     GotEmails result ->
       case result of
         Ok emails ->
-          (Success emails, Cmd.none)
+          -- n.b. unhandled case if emails is empty!
+          (Success { selected = 0, emails = emails }, Cmd.none)
 
         Err error ->
           let
@@ -77,6 +95,14 @@ update msg model =
           in
           (Failure (String.concat ["GET /email-addresses failed: ", errorMessage]), Cmd.none)
 
+    Noop -> (model, Cmd.none)
+
+    SelectEmail index ->
+      case model of
+        Success emails -> (Success { emails | selected = index }, Cmd.none)
+        _ -> (model, Cmd.none)
+
+
 
 
 -- SUBSCRIPTIONS
@@ -85,6 +111,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
+
 
 
 
@@ -112,7 +139,7 @@ styledView model =
     Loading -> viewLoading
 
     Success emails ->
-      div [] [viewSelectEmails emails]
+      viewPage emails
 
 
 {-
@@ -145,7 +172,7 @@ bulmaDangerMessage title contents =
   See: https://bulma.io/documentation/layout/container/
 -}
 bulmaCentered html =
-  div [class "container"] html
+  H.section [class "section"] [div [class "content"] html]
 
 
 viewErrorMessage message =
@@ -165,7 +192,7 @@ viewErrorMessage message =
 -}
 viewLoading =
   let
-    blankPage = viewPage []
+    blankPage = viewPage { selected = 0, emails = Array.empty }
     loadingModal =
       div
         [class "modal", class "is-active"]
@@ -183,15 +210,39 @@ viewLoading =
 
 viewSelectEmails emails =
    let
-     option_from_email = \{ from, datetime, subject } ->
-       option [] [text (datetime ++ " " ++ from ++ ": " ++ subject)]
-     options = List.map option_from_email emails
+     option_from_email = \index { from, datetime, subject } ->
+       option [A.value (String.fromInt index)]
+              [text (datetime ++ " " ++ from ++ ": " ++ subject)]
+     options = Array.toList (Array.indexedMap option_from_email emails)
+     handleInput msg =
+       case String.toInt msg of
+         Nothing -> Noop
+         Just index -> SelectEmail index
    in
-   div [class "select"] [ select [] options]
+   div [class "select"]
+       [select [A.id "emails", onInput handleInput] options]
 
 
-viewPage emails =
-  bulmaCentered [viewSelectEmails emails]
+viewEmailContent email =
+  let
+    base_uri = "http://localhost:8901"
+    from = email.from
+    timestamp = String.fromInt email.timestamp
+    email_uri =  (base_uri ++ "/email/" ++ from ++ "/" ++ timestamp ++ "/plain")
+  in
+  H.iframe [A.src email_uri, A.id "email_content"] []
+
+
+viewPage { selected, emails } =
+  bulmaCentered [ viewSelectEmails emails
+                , let
+                    maybeEmail = Array.get selected emails
+                  in
+                  Maybe.withDefault (text "bad index")
+                                    (Maybe.map viewEmailContent maybeEmail)
+                ]
+
+
 
 
 -- HTTP
@@ -204,6 +255,7 @@ getEmails =
     , expect = Http.expectJson GotEmails emailsDecoder
     }
 
+
 {-
   e.g. of response:
     {
@@ -211,19 +263,25 @@ getEmails =
       emails: [
         {
           from: "foo1@bar.com",
-          date: "2019-01-01T12:00:00+0000",
+          timestamp: 1546344060,
+          datetime: "2019-01-01T12:00:00+0000",
           subject: "Foo Bar",
+          plain: true,
+          html: false,
+          note: "",
         },
       ]
     }
 -}
-emailsDecoder : Decoder (List Email)
+emailsDecoder : Decoder (Array Email)
 emailsDecoder =
-  field "emails" (list emailDecoder)
+  field "emails" (array emailDecoder)
+
 
 emailDecoder : Decoder Email
 emailDecoder =
-  map3 Email
+  map4 Email
       (field "from" string)
       (field "datetime" string)
       (field "subject" string)
+      (field "timestamp" int)

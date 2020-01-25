@@ -8,7 +8,7 @@ get '/emails' do
     emails: [
       {
         from: "foo1@bar.com",
-        timestamp: "1546344060",
+        timestamp: 1546344060,
         datetime: "2019-01-01T12:00:00+0000",
         subject: "Foo Bar",
         plain: true,
@@ -17,7 +17,7 @@ get '/emails' do
       {
         from: "foo2@bar.com",
         datetime: "2019-01-01T12:01:00+0000",
-        timestamp: "1546344120",
+        timestamp: 1546344120,
         subject: "Foo2 Bar",
         plain: true,
         html: false,
@@ -25,11 +25,39 @@ get '/emails' do
       {
         from: "foo3@baz.com",
         datetime: "2019-01-01T12:02:00+0000",
-        timestamp: "1546344180",
+        timestamp: 1546344180,
         subject: "Foo3 Bar",
         plain: true,
         html: false,
       },
     ]
   }.to_json
+end
+
+get '/email/foo1@bar.com/1546344060/plain' do
+  response['Access-Control-Allow-Origin'] = '*'
+  response['Content-Type'] = 'text/plain'
+
+  """
+  Hi,
+
+  First message.
+
+  Regards,
+  Sender
+  """
+end
+
+get '/email/foo2@bar.com/1546344120/plain' do
+  response['Access-Control-Allow-Origin'] = '*'
+  response['Content-Type'] = 'text/plain'
+
+  """
+  Hi,
+
+  Second message.
+
+  Regards,
+  Sender
+  """
 end
