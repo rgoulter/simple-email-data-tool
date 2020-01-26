@@ -82,7 +82,7 @@ feature "client displays email-address" do
       expected_emails =
         ["2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar",
          "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar",
-         "2019-01-01T12:02:00+0000 foo3@baz.com: Foo3 Bar"]
+         "2019-01-03T12:02:00+0000 foo3@baz.com: Foo3 Bar"]
       expect(options_text).to eql(expected_emails)
     end
   end
