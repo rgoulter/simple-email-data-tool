@@ -37,6 +37,8 @@ Capybara.default_driver =
     :selenium_headless
   end
 
+Capybara.default_max_wait_time = 30 if ENV['CI']
+
 ELM_REACTOR_PORT=8900
 
 CLIENT_PATH='/src/Main.elm'
@@ -59,6 +61,8 @@ RSpec.shared_context "runs elm reactor" do
       out: tmp_elm_out.path,
       err: tmp_elm_err.path
     )
+
+    sleep 10 if ENV['CI']
 
     Capybara.app_host = "http://localhost:#{ELM_REACTOR_PORT}"
 
@@ -86,6 +90,8 @@ RSpec.shared_context "sinatra examples" do
       out: tmp_out.path,
       err: tmp_err.path
     )
+
+    sleep 5 if ENV['CI']
 
     yield
   ensure
