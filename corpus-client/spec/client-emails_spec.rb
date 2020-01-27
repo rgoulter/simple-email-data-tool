@@ -1,15 +1,4 @@
-require 'capybara'
-require 'capybara/rspec'
-
-require 'rspec'
-
-require 'tempfile'
-
-Capybara.default_driver = :selenium
-
-ELM_REACTOR_PORT=8900
-
-CLIENT_PATH='/src/Main.elm'
+# n.b. see spec_helper for imports and constants
 
 feature "client displays email-address" do
   # Run/kill the elm-reactor

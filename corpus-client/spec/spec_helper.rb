@@ -13,6 +13,23 @@
 # it.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+
+require 'capybara'
+require 'capybara/rspec'
+
+require 'pry'
+
+require 'rspec'
+
+require 'tempfile'
+
+Capybara.default_driver = :selenium
+# Capybara.default_driver = :selenium_chrome
+
+ELM_REACTOR_PORT=8900
+
+CLIENT_PATH='/src/Main.elm'
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest

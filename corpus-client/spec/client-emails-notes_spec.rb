@@ -1,18 +1,4 @@
-require 'capybara'
-require 'capybara/rspec'
-
-require 'pry'
-
-require 'rspec'
-
-require 'tempfile'
-
-Capybara.default_driver = :selenium
-# Capybara.default_driver = :selenium_chrome
-
-ELM_REACTOR_PORT=8900
-
-CLIENT_PATH='/src/Main.elm'
+# n.b. see spec_helper for imports and constants
 
 feature "client can view the contents of the selected email" do
   # Run/kill the elm-reactor
