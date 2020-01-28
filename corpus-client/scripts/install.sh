@@ -17,7 +17,7 @@ chmod +x geckodriver
 
 ./geckodriver --version
 
-./elm make src/Main.elm
+./elm make src/Main.elm --output=/dev/null
 
 bundle install
 

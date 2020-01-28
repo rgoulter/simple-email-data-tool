@@ -19,11 +19,15 @@ require 'capybara/rspec'
 
 require 'logger'
 
+require 'os'
+
 require 'pry'
 
 require 'rspec'
 
 require 'tempfile'
+
+require './spec/lib/wait_for_server'
 
 Capybara.default_driver =
   case ENV['SELENIUM_BROWSER']
@@ -39,9 +43,41 @@ Capybara.default_driver =
 
 Capybara.default_max_wait_time = 30 if ENV['CI']
 
-ELM_REACTOR_PORT=8900
+ELM_PORT=8900
 
-CLIENT_PATH='/src/Main.elm'
+CLIENT_PATH='/index.html'
+
+RSpec.configure do |config|
+  config.before(:suite) do
+    BUILD_DIR =
+      if OS.windows?
+        Dir.mktmpdir("rspec-elm")
+      else
+        Dir.mkdir('build') unless File.exists?('build')
+        'build'
+      end
+    tmp_out = Tempfile.new("rspec-elm-out")
+    tmp_err = Tempfile.new("rspec-elm-err")
+    cmd = "elm make src/Main.elm --output=#{BUILD_DIR}/index.html"
+    elm_make_pid = Process.spawn(
+      cmd,
+      out: tmp_out.path,
+      err: tmp_err.path
+    )
+
+    _, status = Process.wait2 elm_make_pid
+
+    unless status.exitstatus.zero?
+      puts "command: '#{cmd}'"
+      puts "exit status: #{status.exitstatus}"
+      puts "out log file:"
+      puts File.read(tmp_out)
+      puts "err log file:"
+      puts File.read(tmp_err)
+      raise "failed to build"
+    end
+  end
+end
 
 RSpec.shared_context "logger" do
   logfile = Tempfile.new("execspec-log")
@@ -53,26 +89,34 @@ end
 RSpec.shared_context "runs elm reactor" do
   # Run/kill the elm-reactor
   around(:example) do |example|
-    logger.info("running elm reactor on port #{ELM_REACTOR_PORT}")
-    tmp_elm_out = Tempfile.new("rspec-elm-out")
-    tmp_elm_err = Tempfile.new("rspec-elm-err")
-    elm_server_pid = Process.spawn(
-      "elm reactor --port=#{ELM_REACTOR_PORT}",
-      out: tmp_elm_out.path,
-      err: tmp_elm_err.path
+    logger.info("running static server on port #{ELM_PORT}")
+    tmp_out = Tempfile.new("rspec-static-out")
+    tmp_err = Tempfile.new("rspec-static-err")
+    server_pid = Process.spawn(
+      "python -m http.server #{ELM_PORT}",
+      out: tmp_out.path,
+      err: tmp_err.path,
+      chdir: BUILD_DIR,
     )
 
-    sleep 10 if ENV['CI']
+    begin
+      WaitForServer.poll!("http://localhost:#{ELM_PORT}/")
+    rescue RuntimeError
+      puts "out log file:"
+      puts File.read(tmp_out)
+      puts "err log file:"
+      puts File.read(tmp_err)
+      raise "failed to run static server"
+    end
 
-    Capybara.app_host = "http://localhost:#{ELM_REACTOR_PORT}"
+    Capybara.app_host = "http://localhost:#{ELM_PORT}"
 
     example.run
   ensure
-    logger.info("killing elm reactor port=#{ELM_REACTOR_PORT}; pid=#{elm_server_pid}")
-    Process.kill('KILL', elm_server_pid)
+    logger.info("killing statis server port=#{ELM_PORT}; pid=#{server_pid}")
+    Process.kill('KILL', server_pid)
   end
 end
-
 
 RSpec.shared_context "able to run sinatra examples" do
   def run_sinatra_example(example_name)
@@ -88,10 +132,18 @@ RSpec.shared_context "able to run sinatra examples" do
     server_pid = Process.spawn(
       "ruby #{sinatra_src} -p #{port}",
       out: tmp_out.path,
-      err: tmp_err.path
+      err: tmp_err.path,
     )
 
-    sleep 5 if ENV['CI']
+    begin
+      WaitForServer.poll!("http://localhost:#{port}/")
+    rescue RuntimeError
+      puts "out log file:"
+      puts File.read(tmp_out)
+      puts "err log file:"
+      puts File.read(tmp_err)
+      raise "failed to run sinatra for #{example_name}"
+    end
 
     yield
   ensure

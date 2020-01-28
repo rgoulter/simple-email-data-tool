@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 
 gem 'capybara'
 gem 'ffi'
+gem 'os'
 gem 'pry'
 gem 'rspec'
 gem 'selenium-webdriver'
