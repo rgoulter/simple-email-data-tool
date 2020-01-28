@@ -1,14 +1,14 @@
 # n.b. see spec_helper for imports and constants
 
-feature "client can view the contents of the selected email" do
+feature "viewing the contents of a selected email" do
   include_context "logger"
   include_context "runs elm reactor"
-  include_context "sinatra examples"
+  include_context "able to run sinatra examples"
 
   # SEE: /spec/zoo/<example>.rb
-  context "when /email/<from>/<timestamp>/ returns successfully" do
+  context "/email/<from>/<timestamp>/ returns successfully" do
     around(:example) do |example|
-      run_sinatra("emails_happy", &example)
+      run_sinatra_example("emails_happy", &example)
     end
 
     before(:example) do
@@ -22,7 +22,7 @@ feature "client can view the contents of the selected email" do
         find('#emails').select(email)
       end
 
-      it "shows the email" do
+      it "shows the contents for the email" do
         within_frame('email_content') do
           expect(page).to have_text("First message.")
         end
@@ -36,7 +36,7 @@ feature "client can view the contents of the selected email" do
         find('#emails').select(email)
       end
 
-      it "shows the email" do
+      it "shows the contents for the email" do
         within_frame('email_content') do
           expect(page).to have_text("Second message.")
         end

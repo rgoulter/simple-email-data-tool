@@ -1,14 +1,14 @@
 # n.b. see spec_helper for imports and constants
 
-feature "client can view the contents of the selected email" do
+feature "client make notes about the selected email" do
   include_context "logger"
   include_context "runs elm reactor"
-  include_context "sinatra examples"
+  include_context "able to run sinatra examples"
 
   # SEE: /spec/zoo/<example>.rb
-  context "when PATCH /email/<from>/<timestamp>/ returns successfully" do
+  context "PATCH /email/<from>/<timestamp>/ returns successfully" do
     around(:example) do |example|
-      run_sinatra("emails_happy", &example)
+      run_sinatra_example("emails_happy", &example)
     end
 
     before(:example) do
@@ -27,7 +27,7 @@ feature "client can view the contents of the selected email" do
         expect(find('#summary')).to have_text('updated note for email 1')
       end
 
-      it "persists the note on refresh" do
+      it "persists the note after a refresh" do
         refresh
 
         email = "2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar"
@@ -44,7 +44,7 @@ feature "client can view the contents of the selected email" do
         TEXT
       end
 
-      it "updates the note" do
+      it "can update the note" do
         find('#note').fill_in(with: 'different arbitrary note')
         find('#note').send_keys :enter
         # wait for the request to finish
@@ -55,8 +55,7 @@ feature "client can view the contents of the selected email" do
         email = "2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar"
         find('#emails').select(email)
 
-        # XXX race conditions; need to ensure that we wait before refreshing
-        expect(page).to have_field('note', with: 'different arbitrary note', wait: 10)
+        expect(page).to have_field('note', with: 'different arbitrary note')
       end
 
       context "a note is made for the second email" do

@@ -1,12 +1,12 @@
 # n.b. see spec_helper for imports and constants
 
-feature "client displays email-address" do
+feature "fetching emails on page load" do
   include_context "logger"
   include_context "runs elm reactor"
-  include_context "sinatra examples"
+  include_context "able to run sinatra examples"
 
-  context "when server not running" do
-    it "shows a network error occurred" do
+  context "the server is not running" do
+    it "shows that a network error occurred" do
       # ASSEMBLE
       visit CLIENT_PATH
 
@@ -18,12 +18,12 @@ feature "client displays email-address" do
   end
 
   # SEE: /spec/zoo/<example>.rb
-  context "when /emails returns successfully" do
+  context "/emails returns successfully" do
     around(:example) do |example|
-      run_sinatra("emails_happy", &example)
+      run_sinatra_example("emails_happy", &example)
     end
 
-    it "shows the emails" do
+    it "shows the list of emails" do
       # ASSEMBLE
       visit CLIENT_PATH
 
@@ -39,12 +39,12 @@ feature "client displays email-address" do
     end
   end
 
-  context "when /emails returns successfully, SLOWLY" do
+  context "/emails SLOWLY returns successfully" do
     around(:example) do |example|
-      run_sinatra("emails_happy_slow", &example)
+      run_sinatra_example("emails_happy_slow", &example)
     end
 
-    it "shows text 'loading'" do
+    it "shows 'loading'" do
       # ASSEMBLE
       visit CLIENT_PATH
 

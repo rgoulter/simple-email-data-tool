@@ -74,8 +74,8 @@ RSpec.shared_context "runs elm reactor" do
 end
 
 
-RSpec.shared_context "sinatra examples" do
-  def run_sinatra(example_name)
+RSpec.shared_context "able to run sinatra examples" do
+  def run_sinatra_example(example_name)
     port = 8901  # hardcoded in the Elm client
 
     logger.info("running sinatra (#{example_name}) on port #{port}")
