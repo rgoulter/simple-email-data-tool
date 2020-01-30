@@ -43,4 +43,91 @@ feature "viewing the contents of a selected email" do
       end
     end
   end
+
+  context "/email/<from>/<timestamp>/ returns emails with a mix of plaintext, html content" do
+    around(:example) do |example|
+      run_sinatra_example("emails_happy", &example)
+    end
+
+    before(:example) do
+      visit CLIENT_PATH
+    end
+
+    context "an email with a text payload is selected" do
+      context "plaintext" do
+        before(:example) do
+          # n.b. coupled to view
+          email = "2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar"
+          find('#emails').select(email)
+        end
+
+        it "only has plaintext tab enabled" do
+          tabs = all('.content .tabs li:not(.disabled)', minimum: 1)
+
+          expect(tabs.count).to eq 1
+          expect(tabs[0].text.downcase).to include("plain")
+        end
+      end
+
+      context "html" do
+        before(:example) do
+          # n.b. coupled to view
+          email = "2019-01-03T12:02:00+0000 foo3@baz.com: Foo3 Bar"
+          find('#emails').select(email)
+        end
+
+        it "only has html tab enabled" do
+          tabs = all('.content .tabs li:not(.disabled)', minimum: 1)
+
+          expect(tabs.count).to eq 1
+          expect(tabs[0].text.downcase).to include("html")
+        end
+
+        it "shows the html contents for the email" do
+          within_frame('email_content') do
+            expect(page).to have_selector("p")
+            expect(page).to have_text("HTML only message.")
+          end
+        end
+      end
+    end
+
+    context "an email with a multipart payload is selected" do
+      before(:example) do
+        # n.b. coupled to view
+        email = "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar"
+        find('#emails').select(email)
+      end
+
+      it "has both html and plaintext enabled" do
+        tabs = all('.content .tabs li:not(.disabled)', minimum: 1)
+
+        expect(tabs.count).to eq 2
+
+        content_types = tabs.map(&:text).map(&:downcase)
+        expect(content_types).to include("html")
+        expect(content_types).to include("plain")
+      end
+
+      it "can select the plaintext content" do
+        tab = find('.tabs li', text: "plain")
+        tab.click
+
+        within_frame('email_content') do
+          expect(page).not_to have_selector("p")
+          expect(page).to have_text("Second message")
+        end
+      end
+
+      it "can select the html content" do
+        tab = find('.tabs li', text: "html")
+        tab.click
+
+        within_frame('email_content') do
+          expect(page).to have_selector("p")
+          expect(page).to have_text("Second message")
+        end
+      end
+    end
+  end
 end

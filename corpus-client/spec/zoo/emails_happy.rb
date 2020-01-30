@@ -40,7 +40,7 @@ get '/emails' do
         timestamp: 1546344120,
         subject: "Foo2 Bar",
         plain: true,
-        html: false,
+        html: true,
         note: Notes.email2,
       },
       {
@@ -48,8 +48,8 @@ get '/emails' do
         datetime: "2019-01-03T12:02:00+0000",
         timestamp: 1546516980,
         subject: "Foo3 Bar",
-        plain: true,
-        html: false,
+        plain: false,
+        html: true,
         note: Notes.email3,
       },
     ]
@@ -83,6 +83,42 @@ get '/email/foo2@bar.com/1546344120/plain' do
   Sender
   """
 end
+
+get '/email/foo2@bar.com/1546344120/html' do
+  response['Access-Control-Allow-Origin'] = '*'
+  response['Content-Type'] = 'text/html'
+
+  <<~HTML
+  <!DOCTYPE HTML>
+  <html>
+    <body>
+      <p>Hi,</p>
+      <p>Second message.</p>
+      <p>Regards,<br/>Sender</p>
+    </body>
+  </html>
+  HTML
+end
+
+get '/email/foo3@baz.com/1546516980/html' do
+  response['Access-Control-Allow-Origin'] = '*'
+  response['Content-Type'] = 'text/html'
+  # response['Content-Security-Policy'] = 'frame-src localhost:8900, localhost:8900'
+  # response['Content-Security-Policy'] = 'frame-src http://localhost:8900/index.html'
+
+  <<~HTML
+  <!DOCTYPE HTML>
+  <html>
+    <body>
+      <p>Hi,</p>
+      <p>HTML only message.</p>
+      <p>Regards,<br/>Sender</p>
+    </body>
+  </html>
+  HTML
+end
+
+
 
 # update notes on the method
 patch '/email/foo1@bar.com/1546344060' do

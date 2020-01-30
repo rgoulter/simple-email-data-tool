@@ -3,7 +3,7 @@ module Email exposing (..)
 import Array exposing (Array)
 
 import Json.Decode as Decode
-import Json.Decode exposing (Decoder, array, field, int, string)
+import Json.Decode exposing (Decoder, array, bool, field, int, string)
 
 
 -- MODEL
@@ -15,6 +15,8 @@ type alias Email =
   , subject : String
   , timestamp : Int
   , note : String
+  , plain : Bool
+  , html : Bool
   }
 
 
@@ -50,18 +52,22 @@ emailDecoder =
   let
     -- Simpler to duplicate Email than to
     -- depend on the positional arguments of Email
-    mkEmail from datetime subject timestamp note =
+    mkEmail from datetime subject timestamp note plain html =
       { from = from
       , datetime = datetime
       , subject = subject
       , timestamp = timestamp
       , note = note
+      , plain = plain
+      , html = html
       }
   in
-  Decode.map5
+  Decode.map7
     mkEmail
     (field "from" string)
     (field "datetime" string)
     (field "subject" string)
     (field "timestamp" int)
     (field "note" string)
+    (field "plain" bool)
+    (field "html" bool)

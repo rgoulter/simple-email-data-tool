@@ -159,6 +159,6 @@ view model =
 getEmailsRequest : Cmd Msg
 getEmailsRequest =
   Http.get
-    { url = "http://localhost:8901/emails"
+    { url = "/api/emails"
     , expect = Http.expectJson GotEmails emailsDecoder
     }

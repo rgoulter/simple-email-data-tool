@@ -8,6 +8,7 @@ import Email exposing (Email, emailDecoder)
 import Html as H
 import Html.Attributes as A
 import Html exposing (Html, div, text)
+import Html.Events exposing (onClick)
 import Html.Events.Extra exposing (onChange)
 
 import Http
@@ -22,10 +23,15 @@ import Ui.Bulma exposing (bulmaCentered)
 -- MODEL
 
 
+type Content
+  = Plain
+  | Html
+
+
 type Model
   = Failure String
   | NoEmail
-  | HasEmail { email : Email, loading : Bool }
+  | HasEmail { email : Email, loading : Bool, content : Maybe Content }
 
 
 init : () -> (Model, Cmd Msg)
@@ -55,7 +61,10 @@ setEmail : Model -> Maybe Email -> Model
 setEmail model maybeEmail =
   -- Unhandled race condition: 'loading' an email, but set a new one
   case maybeEmail of
-    Just email -> HasEmail { email = email, loading = False }
+    Just email -> HasEmail { email = email
+                           , loading = False
+                           , content = defaultContentForEmail email
+                           }
     Nothing -> NoEmail
 
 
@@ -67,6 +76,7 @@ setEmail model maybeEmail =
 type Msg
   = GotUpdatedEmail (Result Http.Error Email)
   | UpdateEmailNote String
+  | ShowContent Content
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -76,8 +86,8 @@ update msg model =
       case result of
         Ok updatedEmail ->
           case model of
-            HasEmail { email, loading } ->
-              (HasEmail { email = updatedEmail, loading = False } , Cmd.none)
+            HasEmail { email, loading, content } ->
+              (HasEmail { email = updatedEmail, loading = False, content = content } , Cmd.none)
             _ -> (model, Cmd.none)
 
         Err error ->
@@ -92,10 +102,16 @@ update msg model =
           in
           (Failure (String.concat ["PATCH /email/<from>/<timestamp>/ failed: ", errorMessage]), Cmd.none)
 
+    ShowContent content ->
+      case model of
+        HasEmail email -> (HasEmail { email | content = Just content }, Cmd.none)
+        _ -> (model, Cmd.none)
+
+
     UpdateEmailNote note ->
       case model of
-        HasEmail { email, loading } ->
-          (HasEmail { email = email, loading = True }, updateEmailNote email note)
+        HasEmail { email, loading, content } ->
+          (HasEmail { email = email, loading = True, content = content }, updateEmailNote email note)
         _ -> (model, Cmd.none)
 
 
@@ -104,15 +120,29 @@ update msg model =
 -- VIEW
 
 
-viewEmailContent : Email -> Html msg
-viewEmailContent email =
+viewEmailContentTabs : Email -> Maybe Content -> Html Msg
+viewEmailContentTabs email selection =
   let
-    base_uri = "/api"
-    from = email.from
-    timestamp = String.fromInt email.timestamp
-    email_uri =  (base_uri ++ "/email/" ++ from ++ "/" ++ timestamp ++ "/plain")
+    plainClasses =
+      List.map A.class
+      <|
+      ["tab"] ++
+      (if not email.plain then ["disabled"] else []) ++
+      (if selection == Just Plain then ["is-active"] else [])
+    htmlClasses =
+      List.map A.class
+      <|
+      ["tab"] ++
+      (if not email.html then ["disabled"] else []) ++
+      (if selection == Just Html then ["is-active"] else [])
+    plainTab =
+      H.li (plainClasses ++ [onClick (ShowContent Plain)])
+           [H.a [] [text "plain"]]
+    htmlTab =
+      H.li (htmlClasses ++ [onClick (ShowContent Html)])
+           [H.a [] [text "html"]]
   in
-  H.iframe [A.src email_uri, A.id "email_content"] []
+  div [A.class "tabs"] [H.ul [] [plainTab, htmlTab]]
 
 
 viewNote : Email -> Html Msg
@@ -129,11 +159,46 @@ viewNote email =
           []
 
 
+defaultContentForEmail : Email -> Maybe Content
+defaultContentForEmail email =
+  case (email.plain, email.html) of
+    (False, False) -> Nothing
+    (False, True) -> Just Html
+    (True, False) -> Just Plain
+    (True, True) -> Just Html
+
+
+viewEmailContent : Email -> Maybe Content -> Html Msg
+viewEmailContent email selected =
+  let
+    baseUri = "/api"
+    from = email.from
+    timestamp = String.fromInt email.timestamp
+    uriForContent contentType =
+      (baseUri ++ "/email/" ++ from ++ "/" ++ timestamp ++ "/" ++ contentType)
+    defaultSelected = defaultContentForEmail email
+    contentToShow =
+      case selected of
+        Nothing -> defaultSelected
+        _ -> selected
+    emailUri =
+      case contentToShow of
+        Nothing -> "about:blank"
+        Just Plain -> uriForContent "plain"
+        Just Html -> uriForContent "html"
+  in
+  div [A.class "content"]
+      [ viewEmailContentTabs email contentToShow
+      , H.iframe [A.src emailUri, A.id "email_content"] []
+      ]
+
+
+
 view : Model -> List (Html Msg)
 view model =
   case model of
-    HasEmail { email, loading } ->
-      [viewEmailContent email, viewNote email]
+    HasEmail { email, loading, content } ->
+      [viewEmailContent email content, viewNote email]
 
     -- ASSUMEs that Failure case is handled higher up.
     _ ->
