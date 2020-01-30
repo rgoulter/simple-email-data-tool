@@ -154,6 +154,8 @@ viewNote email =
   H.input [ A.placeholder "Make a note about the email"
           , A.id "note"
           , A.value email.note
+          , A.class "input"
+          , A.class "is-medium"
           , onChange handleChange
           ]
           []
