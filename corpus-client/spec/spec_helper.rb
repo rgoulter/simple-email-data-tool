@@ -50,9 +50,7 @@ CLIENT_PATH='/index.html'
 RSpec.configure do |config|
   config.before(:suite) do
     BUILD_DIR =
-      if OS.windows?
-        Dir.mktmpdir("rspec-elm")
-      else
+      begin
         Dir.mkdir('build') unless File.exists?('build')
         'build'
       end
@@ -87,20 +85,20 @@ RSpec.shared_context "logger" do
 end
 
 RSpec.shared_context "runs elm reactor" do
-  # Run/kill the elm-reactor
+  # Run/kill a server for Elm client
   around(:example) do |example|
     logger.info("running static server on port #{ELM_PORT}")
     tmp_out = Tempfile.new("rspec-static-out")
     tmp_err = Tempfile.new("rspec-static-err")
     server_pid = Process.spawn(
-      "python -m http.server #{ELM_PORT}",
+      {"FLASK_APP" => "src/server.py"},
+      "flask run --port #{ELM_PORT}",
       out: tmp_out.path,
-      err: tmp_err.path,
-      chdir: BUILD_DIR,
+      err: tmp_err.path
     )
 
     begin
-      WaitForServer.poll!("http://localhost:#{ELM_PORT}/")
+      WaitForServer.poll!("http://localhost:#{ELM_PORT}/status")
     rescue RuntimeError
       puts "out log file:"
       puts File.read(tmp_out)

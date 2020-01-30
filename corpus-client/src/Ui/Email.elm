@@ -107,7 +107,7 @@ update msg model =
 viewEmailContent : Email -> Html msg
 viewEmailContent email =
   let
-    base_uri = "http://localhost:8901"
+    base_uri = "/api"
     from = email.from
     timestamp = String.fromInt email.timestamp
     email_uri =  (base_uri ++ "/email/" ++ from ++ "/" ++ timestamp ++ "/plain")
@@ -150,7 +150,7 @@ updateEmailNote email note =
   let
     url =
       String.concat
-        [ "http://localhost:8901/email/"
+        [ "/api/email/"
         , email.from
         , "/"
         , String.fromInt email.timestamp
