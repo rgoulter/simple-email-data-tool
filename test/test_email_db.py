@@ -46,6 +46,56 @@ class TestFlaskApiMethods(unittest.TestCase):
     self.assertEqual(subject, "Test Email Message")
 
 
+  def test_fetch_email_info(self):
+    # ASSEMBLE
+    email_db.insert_mbox_into_connection(self.mbox, self.conn)
+
+    # ACT
+    sender = 'foo@bar.com'
+    timestamp = 1578997800
+    subject = 'Test Email Message'
+    note = 'new note'
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+
+    # ASSERT
+    self.assertEqual(info['timestamp'], timestamp)
+
+
+  def test_update_notes(self):
+    # ASSEMBLE
+    email_db.insert_mbox_into_connection(self.mbox, self.conn)
+
+    # ACT
+    sender = 'foo@bar.com'
+    timestamp = 1578997800
+    subject = 'Test Email Message'
+    note = 'new note'
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)
+
+    # ASSERT
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+    self.assertEqual(info['note'], 'new note')
+
+
+  # The first time note updates is probably an INSERT.
+  # This test checks the note can be updated after an INSERT is made.
+  def test_update_notes_twice(self):
+    # ASSEMBLE
+    email_db.insert_mbox_into_connection(self.mbox, self.conn)
+
+    # ACT
+    sender = 'foo@bar.com'
+    timestamp = 1578997800
+    subject = 'Test Email Message'
+    note = 'new note'
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, 'x')
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)
+
+    # ASSERT
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+    self.assertEqual(info['note'], 'new note')
+
+
 
 
 if __name__ == '__main__':
