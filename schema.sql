@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS emails
 (
-  id INT PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   date DATETIME,
   from_host TEXT,
   from_email TEXT,
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS emails
 
 CREATE TABLE IF NOT EXISTS receipts
 (
-  id INT PRIMARY KEY,
-  email_id INT NOT NULL,
+  id INTEGER PRIMARY KEY,
+  email_id INTEGER NOT NULL,
   total DECIMAL(10,2) NOT NULL,
   currency TEXT NOT NULL,
   verified BOOLEAN DEFAULT 0
@@ -21,10 +21,17 @@ CREATE TABLE IF NOT EXISTS receipts
 
 CREATE TABLE IF NOT EXISTS items
 (
-  id INT PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   description TEXT,
   amount DECIMAL(10,2) NOT NULL,
   currency TEXT NOT NULL,
-  receipt_id INT,
+  receipt_id INTEGER,
   FOREIGN KEY (receipt_id) REFERENCES receipts(id)
+);
+
+CREATE TABLE IF NOT EXISTS notes
+(
+  email_id INTEGER PRIMARY_KEY UNIQUE,
+  note TEXT NOT NULL,
+  FOREIGN KEY (email_id) REFERENCES emails(id)
 );
