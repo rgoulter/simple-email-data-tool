@@ -115,6 +115,8 @@ class TestFlaskApiMethods(unittest.TestCase):
     self.assertEqual(info['timestamp'], timestamp)
 
 
+  @unittest.skipIf(sqlite3.sqlite_version < "3.24",
+                   "update needs sqlite UPSERT, since sqlite 3.24.0")
   def test_update_notes(self):
     # ASSEMBLE
     email_db.insert_mbox_into_connection(self.mbox, self.conn)
@@ -133,6 +135,8 @@ class TestFlaskApiMethods(unittest.TestCase):
 
   # The first time note updates is probably an INSERT.
   # This test checks the note can be updated after an INSERT is made.
+  @unittest.skipIf(sqlite3.sqlite_version < "3.24",
+                   "update needs sqlite UPSERT, since sqlite 3.24.0")
   def test_update_notes_twice(self):
     # ASSEMBLE
     email_db.insert_mbox_into_connection(self.mbox, self.conn)
