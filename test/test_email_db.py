@@ -42,8 +42,62 @@ class TestFlaskApiMethods(unittest.TestCase):
     self.assertEqual(len(rows), 1)
     (from_email, date, subject) = rows[0]
     self.assertEqual(from_email, "foo@bar.com")
-    self.assertEqual(date, "2020-01-14T10:30:00+00:00")
-    self.assertEqual(subject, "Test Email Message")
+    self.assertEqual(date, "2019-01-01T12:00:00+00:00")
+    self.assertEqual(subject, "Foo Bar")
+
+
+  def test_has_content_on_only_plaintext(self):
+    # ASSEMBLE
+    mbox = mailbox.mbox('test/simple.mbox')
+
+    # ACT
+    sender = 'foo@bar.com'
+    timestamp = 1546344000
+    subject = 'Foo Bar'
+    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
+    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+
+    # ASSERT
+    self.assertEqual(has_plain, True)
+    self.assertEqual(has_html, False)
+
+    mbox.close()
+
+
+  def test_has_content_on_only_html(self):
+    # ASSEMBLE
+    mbox = mailbox.mbox('test/html.mbox')
+
+    # ACT
+    sender = 'foo3@baz.com'
+    timestamp = 1546516920
+    subject = 'Foo3 Bar'
+    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
+    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+
+    # ASSERT
+    self.assertEqual(has_plain, False)
+    self.assertEqual(has_html, True)
+
+    mbox.close()
+
+
+  def test_has_content_both(self):
+    # ASSEMBLE
+    mbox = mailbox.mbox('test/both.mbox')
+
+    # ACT
+    sender = 'foo2@bar.com'
+    timestamp = 1546344060
+    subject = 'Foo2 Bar'
+    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
+    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+
+    # ASSERT
+    self.assertEqual(has_plain, True)
+    self.assertEqual(has_html, True)
+
+    mbox.close()
 
 
   def test_fetch_email_info(self):
@@ -52,8 +106,8 @@ class TestFlaskApiMethods(unittest.TestCase):
 
     # ACT
     sender = 'foo@bar.com'
-    timestamp = 1578997800
-    subject = 'Test Email Message'
+    timestamp = 1546344000
+    subject = 'Foo Bar'
     note = 'new note'
     info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
 
@@ -67,8 +121,8 @@ class TestFlaskApiMethods(unittest.TestCase):
 
     # ACT
     sender = 'foo@bar.com'
-    timestamp = 1578997800
-    subject = 'Test Email Message'
+    timestamp = 1546344000
+    subject = 'Foo Bar'
     note = 'new note'
     email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)
 
@@ -85,8 +139,8 @@ class TestFlaskApiMethods(unittest.TestCase):
 
     # ACT
     sender = 'foo@bar.com'
-    timestamp = 1578997800
-    subject = 'Test Email Message'
+    timestamp = 1546344000
+    subject = 'Foo Bar'
     note = 'new note'
     email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, 'x')
     email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)

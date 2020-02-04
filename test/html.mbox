@@ -1,0 +1,30 @@
+From MAILER-DAEMON Tue Feb  4 09:55:30 2020
+Content-Type: multipart/mixed; boundary="===============4335271923775029405=="
+MIME-Version: 1.0
+Subject: Foo3 Bar
+Date: Thu, 03 Jan 2019 12:02:00 +0000
+From: foo3@baz.com
+
+--===============4335271923775029405==
+Content-Type: multipart/related; boundary="===============5471704453691678669=="
+MIME-Version: 1.0
+
+--===============5471704453691678669==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+
+<!DOCTYPE HTML>
+<html>
+  <body>
+    <p>Hi,</p>
+    <p>HTML only message.</p>
+    <p>Regards,<br/>Sender</p>
+  </body>
+</html>
+  
+--===============5471704453691678669==--
+
+--===============4335271923775029405==--
+

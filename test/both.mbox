@@ -1,0 +1,47 @@
+From MAILER-DAEMON Tue Feb  4 09:54:57 2020
+Content-Type: multipart/mixed; boundary="===============0145389878579320562=="
+MIME-Version: 1.0
+Subject: Foo2 Bar
+Date: Tue, 01 Jan 2019 12:01:00 +0000
+From: foo2@bar.com
+
+--===============0145389878579320562==
+Content-Type: multipart/alternative; boundary="===============4512203790261566444=="
+MIME-Version: 1.0
+
+--===============4512203790261566444==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi
+
+Second message.
+
+Regards,
+Sender
+--===============4512203790261566444==
+Content-Type: multipart/related; boundary="===============8948994008456233380=="
+MIME-Version: 1.0
+
+--===============8948994008456233380==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+
+  <!DOCTYPE HTML>
+<html>
+  <body>
+    <p>Hi,</p>
+    <p>Second message.</p>
+    <p>Regards,<br/>Sender</p>
+  </body>
+</html>
+  
+--===============8948994008456233380==--
+
+--===============4512203790261566444==--
+
+--===============0145389878579320562==--
+

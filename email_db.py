@@ -14,6 +14,52 @@ class Email(NamedTuple):
   subject: str
 
 
+def leaf_payloads_of_mail(m):
+  if m.is_multipart():
+    ms = [leaf_payloads_of_mail(p) for p in m.get_payload()]
+    flattened = [item for sublist in ms for item in sublist]
+    return flattened
+  else:
+    return [(m.get_content_subtype(), m)]
+
+
+# returns dict with keys 'plain' or 'html'
+def plaintext_payloads_of_mail(m):
+  leaves = leaf_payloads_of_mail(m)
+  return dict((ct, m.get_payload(decode=True)) for (ct, m) in leaves if m.get_content_maintype() == 'text')
+
+
+def get_message_from_mbox(mbox, sender, timestamp, subject):
+  for message in mbox:
+    fr = email_of_from(message['From'])
+    dt = int(parse(message['Date']).timestamp())
+
+    if (fr == sender and message['Subject'] == subject and dt == int(timestamp)):
+      return message
+
+  return None
+
+
+def has_plain(mbox, sender, timestamp, subject):
+  msg = get_message_from_mbox(mbox, sender, timestamp, subject)
+
+  if msg:
+    payloads = plaintext_payloads_of_mail(msg)
+    return "plain" in payloads
+
+  return False
+
+
+def has_html(mbox, sender, timestamp, subject):
+  msg = get_message_from_mbox(mbox, sender, timestamp, subject)
+
+  if msg:
+    payloads = plaintext_payloads_of_mail(msg)
+    return "html" in payloads
+
+  return False
+
+
 # A <B> => B
 # <B>   => B
 # B     => B
@@ -54,16 +100,16 @@ def fetch_email_info(conn, mbox, sender, timestamp, subject):
   ''', (sender, str(timestamp), subject))
   (res_from_email, res_date, res_timestamp, res_subject, res_note) = c.fetchone()
 
-  has_plaintext = True # WIP
-  has_html = False # WIP
+  plaintext = has_plain(mbox, sender, timestamp, subject)
+  html = has_html(mbox, sender, timestamp, subject)
 
   return {
     'from': res_from_email,
     'timestamp': int(res_timestamp),
     'datetime': res_date,
     'subject': res_subject,
-    'plain': has_plaintext,
-    'html': has_html,
+    'plain': plaintext,
+    'html': html,
     'note': res_note
   }
 
