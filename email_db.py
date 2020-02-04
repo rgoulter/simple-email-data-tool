@@ -29,19 +29,19 @@ def plaintext_payloads_of_mail(m):
   return dict((ct, m.get_payload(decode=True)) for (ct, m) in leaves if m.get_content_maintype() == 'text')
 
 
-def get_message_from_mbox(mbox, sender, timestamp, subject):
+def get_message_from_mbox(mbox, sender, timestamp):
   for message in mbox:
     fr = email_of_from(message['From'])
     dt = int(parse(message['Date']).timestamp())
 
-    if (fr == sender and message['Subject'] == subject and dt == int(timestamp)):
+    if (fr == sender and dt == int(timestamp)):
       return message
 
   return None
 
 
-def has_plain(mbox, sender, timestamp, subject):
-  msg = get_message_from_mbox(mbox, sender, timestamp, subject)
+def has_plain(mbox, sender, timestamp):
+  msg = get_message_from_mbox(mbox, sender, timestamp)
 
   if msg:
     payloads = plaintext_payloads_of_mail(msg)
@@ -50,8 +50,8 @@ def has_plain(mbox, sender, timestamp, subject):
   return False
 
 
-def has_html(mbox, sender, timestamp, subject):
-  msg = get_message_from_mbox(mbox, sender, timestamp, subject)
+def has_html(mbox, sender, timestamp):
+  msg = get_message_from_mbox(mbox, sender, timestamp)
 
   if msg:
     payloads = plaintext_payloads_of_mail(msg)
@@ -90,18 +90,18 @@ def insert_mbox_into_connection(mbox, conn):
   conn.commit()
 
 
-def fetch_email_info(conn, mbox, sender, timestamp, subject):
+def fetch_email_info(conn, mbox, sender, timestamp):
   c = conn.cursor()
   c.execute('''
      SELECT from_email, date, strftime('%s', date) AS timestamp, subject, note
      FROM emails
      LEFT OUTER JOIN notes ON notes.email_id = emails.id
-     WHERE from_email = ? AND timestamp = ? AND subject = ?
-  ''', (sender, str(timestamp), subject))
+     WHERE from_email = ? AND timestamp = ?
+  ''', (sender, str(timestamp)))
   (res_from_email, res_date, res_timestamp, res_subject, res_note) = c.fetchone()
 
-  plaintext = has_plain(mbox, sender, timestamp, subject)
-  html = has_html(mbox, sender, timestamp, subject)
+  plaintext = has_plain(mbox, sender, timestamp)
+  html = has_html(mbox, sender, timestamp)
 
   return {
     'from': res_from_email,
@@ -114,17 +114,46 @@ def fetch_email_info(conn, mbox, sender, timestamp, subject):
   }
 
 
+def fetch_emails_info(conn, mbox):
+  c = conn.cursor()
+  c.execute('''
+     SELECT from_email, date, strftime('%s', date) AS timestamp, subject, note
+     FROM emails
+     LEFT OUTER JOIN notes ON notes.email_id = emails.id
+  ''')
+
+  rows = c.fetchall()
+  result = []
+
+  for row in rows:
+    (res_from_email, res_date, res_timestamp, res_subject, res_note) = row
+
+    plaintext = has_plain(mbox, sender, timestamp, subject)
+    html = has_html(mbox, sender, timestamp, subject)
+
+    result << {
+       'from': res_from_email,
+       'timestamp': int(res_timestamp),
+       'datetime': res_date,
+       'subject': res_subject,
+       'plain': plaintext,
+       'html': html,
+       'note': res_note
+      }
+
+  return result
 
 
-def update_note(conn, mbox, sender, timestamp, subject, note):
+
+
+def update_note(conn, mbox, sender, timestamp, note):
   c = conn.cursor()
   c.execute('''
     INSERT INTO notes (email_id, note)
     VALUES ((SELECT id
              FROM emails
              WHERE from_email = ?
-               AND strftime('%s', date) = ?
-               AND subject = ?),
+               AND strftime('%s', date) = ?),
             ?)
     ON CONFLICT(email_id) DO
       UPDATE
@@ -132,9 +161,8 @@ def update_note(conn, mbox, sender, timestamp, subject, note):
       WHERE email_id = (SELECT id
                         FROM emails
                         WHERE from_email = ?
-                          AND strftime('%s', date) = ?
-                          AND subject = ?)
-  ''', (sender, str(timestamp), subject, note, note, sender, str(timestamp), subject))
+                          AND strftime('%s', date) = ?)
+  ''', (sender, str(timestamp), note, note, sender, str(timestamp)))
   conn.commit()
 
-  return fetch_email_info(conn, mbox, sender, timestamp, subject)
+  return fetch_email_info(conn, mbox, sender, timestamp)

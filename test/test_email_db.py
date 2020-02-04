@@ -54,8 +54,8 @@ class TestFlaskApiMethods(unittest.TestCase):
     sender = 'foo@bar.com'
     timestamp = 1546344000
     subject = 'Foo Bar'
-    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
-    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+    has_plain = email_db.has_plain(mbox, sender, timestamp)
+    has_html = email_db.has_html(mbox, sender, timestamp)
 
     # ASSERT
     self.assertEqual(has_plain, True)
@@ -72,8 +72,8 @@ class TestFlaskApiMethods(unittest.TestCase):
     sender = 'foo3@baz.com'
     timestamp = 1546516920
     subject = 'Foo3 Bar'
-    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
-    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+    has_plain = email_db.has_plain(mbox, sender, timestamp)
+    has_html = email_db.has_html(mbox, sender, timestamp)
 
     # ASSERT
     self.assertEqual(has_plain, False)
@@ -90,8 +90,8 @@ class TestFlaskApiMethods(unittest.TestCase):
     sender = 'foo2@bar.com'
     timestamp = 1546344060
     subject = 'Foo2 Bar'
-    has_plain = email_db.has_plain(mbox, sender, timestamp, subject)
-    has_html = email_db.has_html(mbox, sender, timestamp, subject)
+    has_plain = email_db.has_plain(mbox, sender, timestamp)
+    has_html = email_db.has_html(mbox, sender, timestamp)
 
     # ASSERT
     self.assertEqual(has_plain, True)
@@ -107,9 +107,8 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo@bar.com'
     timestamp = 1546344000
-    subject = 'Foo Bar'
     note = 'new note'
-    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp)
 
     # ASSERT
     self.assertEqual(info['timestamp'], timestamp)
@@ -124,12 +123,11 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo@bar.com'
     timestamp = 1546344000
-    subject = 'Foo Bar'
     note = 'new note'
-    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, note)
 
     # ASSERT
-    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp)
     self.assertEqual(info['note'], 'new note')
 
 
@@ -146,11 +144,11 @@ class TestFlaskApiMethods(unittest.TestCase):
     timestamp = 1546344000
     subject = 'Foo Bar'
     note = 'new note'
-    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, 'x')
-    email_db.update_note(self.conn, self.mbox, sender, timestamp, subject, note)
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, 'x')
+    email_db.update_note(self.conn, self.mbox, sender, timestamp, note)
 
     # ASSERT
-    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp, subject)
+    info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp)
     self.assertEqual(info['note'], 'new note')
 
 
