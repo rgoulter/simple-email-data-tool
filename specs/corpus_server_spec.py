@@ -19,8 +19,6 @@ import subprocess
 
 import sys
 
-import time
-
 from tempfile import TemporaryDirectory
 
 
@@ -40,9 +38,6 @@ with description('Corpus Server') as self:
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
         server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout=PIPE, stderr = PIPE)
-
-        if os.environ.get("CI"):
-          time.sleep(5)
 
         poll = server.wait(timeout=30)
         outs, errs = server.communicate()
@@ -70,9 +65,6 @@ with description('Corpus Server') as self:
         # expect(response.status_code).to(equal(200))
         try:
           server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
-
-          if os.environ.get("CI"):
-            time.sleep(5)
 
           response = requests.get("http://localhost:5000/status")
           expect(response.status_code).to(equal(200))
@@ -105,9 +97,6 @@ with description('Corpus Server') as self:
 
         try:
           server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
-
-          if os.environ.get("CI"):
-            time.sleep(5)
 
           response = requests.get("http://localhost:5000/api/emails")
           expect(response.status_code).to(equal(200))
@@ -145,9 +134,6 @@ with description('Corpus Server') as self:
         try:
           server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-          if os.environ.get("CI"):
-            time.sleep(5)
-
           response = requests.get("http://localhost:5000/api/emails")
           expect(response.status_code).to(equal(200))
 
@@ -184,9 +170,6 @@ with description('Corpus Server') as self:
           try:
             server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-            if os.environ.get("CI"):
-              time.sleep(5)
-
             response = requests.get("http://localhost:5000/api/email/foo@bar.com/1546344000/plain")
             expect(response.status_code).to(equal(200))
 
@@ -220,9 +203,6 @@ with description('Corpus Server') as self:
           try:
             server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-            if os.environ.get("CI"):
-              time.sleep(5)
-
             response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/plain")
             expect(response.status_code).to(equal(200))
 
@@ -255,9 +235,6 @@ with description('Corpus Server') as self:
 
           try:
             server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
-
-            if os.environ.get("CI"):
-              time.sleep(5)
 
             response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/html")
             expect(response.status_code).to(equal(200))
@@ -293,9 +270,6 @@ with description('Corpus Server') as self:
           try:
             server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-            if os.environ.get("CI"):
-              time.sleep(5)
-
             response = requests.get("http://localhost:5000/api/email/foo3@baz.com/1546516920/html")
             expect(response.status_code).to(equal(200))
 
@@ -329,9 +303,6 @@ with description('Corpus Server') as self:
 
           try:
             server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
-
-            if os.environ.get("CI"):
-              time.sleep(5)
 
             req_data = json.dumps({
               "note": "updated note"

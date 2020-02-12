@@ -6,7 +6,7 @@ before_install:
 script:
 - bash ./corpus-client/scripts/test.sh
 - python -m unittest
-- env CI=travis mamba
+- mamba
 
 notifications:
   email: false
