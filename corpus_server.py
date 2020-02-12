@@ -121,7 +121,7 @@ def email_content(sender, timestamp, content_subtype):
   mbox = mailbox.mbox(mbox_path)
 
   msg = email_db.get_message_from_mbox(mbox, sender, int(timestamp))
-  content = plaintext_payloads_of_mail(msg)
+  content = email_db.plaintext_payloads_of_mail(msg)
 
   mbox.close()
 

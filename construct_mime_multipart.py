@@ -51,7 +51,7 @@ def message_with_html_and_plain():
   #        text/html
   msgMixed = MIMEMultipart('mixed')
   msgMixed['Subject'] = 'Foo2 Bar'
-  msgMixed['From'] = "foo2@bar.baz"
+  msgMixed['From'] = "foo2@bar.com"
   msgMixed['Date'] = "Tue, 01 Jan 2019 12:01:00 +0000"
   msgMixed.attach(msgAlternative)
 
@@ -83,7 +83,7 @@ def message_with_html():
   #        text/html
   msgMixed = MIMEMultipart('mixed')
   msgMixed['Subject'] = 'Foo3 Bar'
-  msgMixed['From'] = "foo3@bar.baz"
+  msgMixed['From'] = "foo3@baz.com"
   msgMixed['Date'] = "Thu, 03 Jan 2019 12:02:00 +0000"
   msgMixed.attach(msgRelated)
 

@@ -17,7 +17,7 @@ From MAILER-DAEMON Wed Feb 12 11:54:32 2020
 Content-Type: multipart/mixed; boundary="===============1602477251998784918=="
 MIME-Version: 1.0
 Subject: Foo2 Bar
-From: foo2@bar.baz
+From: foo2@bar.com
 Date: Tue, 01 Jan 2019 12:01:00 +0000
 
 --===============1602477251998784918==
@@ -64,7 +64,7 @@ From MAILER-DAEMON Wed Feb 12 11:54:32 2020
 Content-Type: multipart/mixed; boundary="===============1540831233228776225=="
 MIME-Version: 1.0
 Subject: Foo3 Bar
-From: foo3@bar.baz
+From: foo3@baz.com
 Date: Thu, 03 Jan 2019 12:02:00 +0000
 
 --===============1540831233228776225==

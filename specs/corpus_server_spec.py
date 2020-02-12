@@ -124,3 +124,104 @@ with description('Corpus Server') as self:
         finally:
           server.kill()
           outs, errs = server.communicate()
+
+    with context('/api/email/<sender>/<timestamp>/<content>'):
+      with it('/api/email/foo@bar.com/1546344000/plain'):
+        with TemporaryDirectory() as tmpd:
+          flask_app = abspath("corpus_server.py")
+          mbox_path = abspath("specs/happy.mbox")
+          db_path = join(tmpd, "test.db")
+          env = {
+            "FLASK_APP": flask_app,
+            "CORPUS_MBOX": mbox_path,
+            "CORPUS_DB": db_path,
+            "PATH": os.environ["PATH"]
+          }
+          if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+            env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+          try:
+            server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+            response = requests.get("http://localhost:5000/api/email/foo@bar.com/1546344000/plain")
+            expect(response.status_code).to(equal(200))
+
+            # XXX assert text contents
+          finally:
+            server.kill()
+            outs, errs = server.communicate()
+
+      with it('/api/email/foo2@bar.com/1546344060/plain'):
+        with TemporaryDirectory() as tmpd:
+          flask_app = abspath("corpus_server.py")
+          mbox_path = abspath("specs/happy.mbox")
+          db_path = join(tmpd, "test.db")
+          env = {
+            "FLASK_APP": flask_app,
+            "CORPUS_MBOX": mbox_path,
+            "CORPUS_DB": db_path,
+            "PATH": os.environ["PATH"]
+          }
+          if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+            env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+          try:
+            server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+            response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/plain")
+            expect(response.status_code).to(equal(200))
+
+            # XXX assert text contents
+          finally:
+            server.kill()
+            outs, errs = server.communicate()
+
+      with it('/api/email/foo2@bar.com/1546344060/html'):
+        with TemporaryDirectory() as tmpd:
+          flask_app = abspath("corpus_server.py")
+          mbox_path = abspath("specs/happy.mbox")
+          db_path = join(tmpd, "test.db")
+          env = {
+            "FLASK_APP": flask_app,
+            "CORPUS_MBOX": mbox_path,
+            "CORPUS_DB": db_path,
+            "PATH": os.environ["PATH"]
+          }
+          if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+            env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+          try:
+            server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+            response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/html")
+            expect(response.status_code).to(equal(200))
+
+            # XXX assert text contents
+          finally:
+            server.kill()
+            outs, errs = server.communicate()
+
+      with it('/api/email/foo3@baz.com/1546516920/html'):
+        with TemporaryDirectory() as tmpd:
+          flask_app = abspath("corpus_server.py")
+          mbox_path = abspath("specs/happy.mbox")
+          db_path = join(tmpd, "test.db")
+          env = {
+            "FLASK_APP": flask_app,
+            "CORPUS_MBOX": mbox_path,
+            "CORPUS_DB": db_path,
+            "PATH": os.environ["PATH"]
+          }
+          if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+            env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+          try:
+            server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+            response = requests.get("http://localhost:5000/api/email/foo3@baz.com/1546516920/html")
+            expect(response.status_code).to(equal(200))
+
+            # XXX assert text contents
+          finally:
+            server.kill()
+            outs, errs = server.communicate()
