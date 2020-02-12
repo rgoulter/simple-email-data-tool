@@ -78,6 +78,12 @@ with description('Corpus Server') as self:
         finally:
           server.kill()
           outs, errs = server.communicate()
+          if outs:
+            print("outs:")
+            print(outs)
+          if errs:
+            print("errs:")
+            print(errs)
 
     with it('is able to return /api/emails successfully with empty result'):
       with TemporaryDirectory() as tmpd:
@@ -108,6 +114,12 @@ with description('Corpus Server') as self:
         finally:
           server.kill()
           outs, errs = server.communicate()
+          if outs:
+            print("outs:")
+            print(outs)
+          if errs:
+            print("errs:")
+            print(errs)
 
   with context('run with specs/happy.mbox, but no DB'):
     with it('is able to return /api/emails successfully with 3 results'):
@@ -139,6 +151,12 @@ with description('Corpus Server') as self:
         finally:
           server.kill()
           outs, errs = server.communicate()
+          if outs:
+            print("outs:")
+            print(outs)
+          if errs:
+            print("errs:")
+            print(errs)
 
     with context('/api/email/<sender>/<timestamp>/<content>'):
       with it('/api/email/foo@bar.com/1546344000/plain'):
@@ -168,6 +186,12 @@ with description('Corpus Server') as self:
           finally:
             server.kill()
             outs, errs = server.communicate()
+            if outs:
+              print("outs:")
+              print(outs)
+            if errs:
+              print("errs:")
+              print(errs)
 
       with it('/api/email/foo2@bar.com/1546344060/plain'):
         with TemporaryDirectory() as tmpd:
@@ -196,6 +220,12 @@ with description('Corpus Server') as self:
           finally:
             server.kill()
             outs, errs = server.communicate()
+            if outs:
+              print("outs:")
+              print(outs)
+            if errs:
+              print("errs:")
+              print(errs)
 
       with it('/api/email/foo2@bar.com/1546344060/html'):
         with TemporaryDirectory() as tmpd:
@@ -225,6 +255,12 @@ with description('Corpus Server') as self:
           finally:
             server.kill()
             outs, errs = server.communicate()
+            if outs:
+              print("outs:")
+              print(outs)
+            if errs:
+              print("errs:")
+              print(errs)
 
       with it('/api/email/foo3@baz.com/1546516920/html'):
         with TemporaryDirectory() as tmpd:
@@ -253,6 +289,12 @@ with description('Corpus Server') as self:
           finally:
             server.kill()
             outs, errs = server.communicate()
+            if outs:
+              print("outs:")
+              print(outs)
+            if errs:
+              print("errs:")
+              print(errs)
 
     if sqlite3.sqlite_version >= "3.24":
       with it('PATCH /api/email/foo@bar.com/1546344000/plain'):
@@ -285,3 +327,9 @@ with description('Corpus Server') as self:
           finally:
             server.kill()
             outs, errs = server.communicate()
+            if outs:
+              print("outs:")
+              print(outs)
+            if errs:
+              print("errs:")
+              print(errs)
