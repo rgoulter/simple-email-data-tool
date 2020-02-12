@@ -4,16 +4,46 @@ import json
 
 import mailbox
 
+from os import getenv
+import os
+from os.path import abspath, dirname, isfile, join
+
 import requests
 
 import sqlite3
 
-import email_db
+from subprocess import Popen, run
 
-app = Flask(__name__, static_folder="./corpus-client/build/")
+import sys
 
-db_name = 'receipts.db'
-mbox_path = 'receipts.mbox'
+from . import email_db
+
+
+
+
+mbox_path = getenv("CORPUS_MBOX", 'receipts.mbox')
+db_path = getenv("CORPUS_MBOX", 'receipts.db')
+
+
+
+
+if not isfile(mbox_path):
+  print("no mbox at CORPUS_MBOX (%s) or CWD/receipts.mbox" % (mbox_path), file=sys.stderr)
+  sys.exit(1)
+
+
+
+
+schema_file = join(dirname(__file__), "schema.sql")
+if not isfile(db_path):
+  # create an empty file
+  run(["sqlite3", db_path, "-init", schema_file])
+
+
+
+
+static_folder = join(dirname(__file__), "corpus-client/build/")
+app = Flask(__name__, static_folder = static_folder)
 
 
 
