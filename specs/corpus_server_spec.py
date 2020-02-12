@@ -25,6 +25,7 @@ from tempfile import TemporaryDirectory
 
 
 
+print("PATH, in spec; %s" % os.environ["PATH"])
 
 with description('Corpus Server') as self:
   # n.b. Python/mamba doesn't allow sharing variables here?!
