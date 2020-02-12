@@ -6,9 +6,6 @@ before_install:
 script:
 - bash ./corpus-client/scripts/test.sh
 - python -m unittest
-- env
-- which mamba
-- which flask
 - env CI=travis mamba
 
 notifications:

@@ -25,8 +25,6 @@ from tempfile import TemporaryDirectory
 
 
 
-print("PATH, in spec; %s" % os.environ["PATH"])
-
 with description('Corpus Server') as self:
   # n.b. Python/mamba doesn't allow sharing variables here?!
   with context('run in a directory with no mbox or DB'):
@@ -36,6 +34,8 @@ with description('Corpus Server') as self:
         env = {
           "FLASK_APP": flask_app,
           "PATH": os.environ["PATH"],
+          "LC_ALL": "C.UTF-8",
+          "LANG": "C.UTF-8",
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -59,7 +59,9 @@ with description('Corpus Server') as self:
         env = {
           "FLASK_APP": flask_app,
           "CORPUS_MBOX": empty_mbox_path,
-          "PATH": os.environ["PATH"]
+          "PATH": os.environ["PATH"],
+          "LC_ALL": "C.UTF-8",
+          "LANG": "C.UTF-8",
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -94,7 +96,9 @@ with description('Corpus Server') as self:
         env = {
           "FLASK_APP": flask_app,
           "CORPUS_MBOX": empty_mbox_path,
-          "PATH": os.environ["PATH"]
+          "PATH": os.environ["PATH"],
+          "LC_ALL": "C.UTF-8",
+          "LANG": "C.UTF-8",
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -131,7 +135,9 @@ with description('Corpus Server') as self:
           "FLASK_APP": flask_app,
           "CORPUS_MBOX": mbox_path,
           "CORPUS_DB": db_path,
-          "PATH": os.environ["PATH"]
+          "PATH": os.environ["PATH"],
+          "LC_ALL": "C.UTF-8",
+          "LANG": "C.UTF-8",
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -168,7 +174,9 @@ with description('Corpus Server') as self:
             "FLASK_APP": flask_app,
             "CORPUS_MBOX": mbox_path,
             "CORPUS_DB": db_path,
-            "PATH": os.environ["PATH"]
+            "PATH": os.environ["PATH"],
+            "LC_ALL": "C.UTF-8",
+            "LANG": "C.UTF-8",
           }
           if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
             env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -202,7 +210,9 @@ with description('Corpus Server') as self:
             "FLASK_APP": flask_app,
             "CORPUS_MBOX": mbox_path,
             "CORPUS_DB": db_path,
-            "PATH": os.environ["PATH"]
+            "PATH": os.environ["PATH"],
+            "LC_ALL": "C.UTF-8",
+            "LANG": "C.UTF-8",
           }
           if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
             env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -236,7 +246,9 @@ with description('Corpus Server') as self:
             "FLASK_APP": flask_app,
             "CORPUS_MBOX": mbox_path,
             "CORPUS_DB": db_path,
-            "PATH": os.environ["PATH"]
+            "PATH": os.environ["PATH"],
+            "LC_ALL": "C.UTF-8",
+            "LANG": "C.UTF-8",
           }
           if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
             env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -271,7 +283,9 @@ with description('Corpus Server') as self:
             "FLASK_APP": flask_app,
             "CORPUS_MBOX": mbox_path,
             "CORPUS_DB": db_path,
-            "PATH": os.environ["PATH"]
+            "PATH": os.environ["PATH"],
+            "LC_ALL": "C.UTF-8",
+            "LANG": "C.UTF-8",
           }
           if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
             env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -306,7 +320,9 @@ with description('Corpus Server') as self:
             "FLASK_APP": flask_app,
             "CORPUS_MBOX": mbox_path,
             "CORPUS_DB": db_path,
-            "PATH": os.environ["PATH"]
+            "PATH": os.environ["PATH"],
+            "LC_ALL": "C.UTF-8",
+            "LANG": "C.UTF-8",
           }
           if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
             env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
