@@ -22,7 +22,7 @@ from . import email_db
 
 
 mbox_path = getenv("CORPUS_MBOX", 'receipts.mbox')
-db_path = getenv("CORPUS_MBOX", 'receipts.db')
+db_path = getenv("CORPUS_DB", 'receipts.db')
 
 
 
@@ -34,10 +34,17 @@ if not isfile(mbox_path):
 
 
 
-schema_file = join(dirname(__file__), "schema.sql")
+schema_file = join(abspath(dirname(__file__)), "schema.sql")
 if not isfile(db_path):
-  # create an empty file
-  run(["sqlite3", db_path, "-init", schema_file])
+  # Initialise DB with MBox
+  print("initialising %s with %s" % (db_path, schema_file), file=sys.stderr)
+  run(["sqlite3", db_path, "-init", schema_file, ".quit"])
+
+  mbox = mailbox.mbox(mbox_path)
+  conn = sqlite3.connect(db_path)
+  email_db.insert_mbox_into_connection(mbox, conn)
+  conn.close()
+  mbox.close()
 
 
 
@@ -66,27 +73,30 @@ def elm():
 
 @app.route('/api/emails')
 def emails():
-  global db_name, mbox_path
+  global db_path, mbox_path
 
   mbox = mailbox.mbox(mbox_path)
-  conn = sqlite3.connect(db_name)
+  conn = sqlite3.connect(db_path)
 
   emails = email_db.fetch_emails_info(conn, mbox)
 
   mbox.close()
   conn.close()
 
-  return json.dumps(emails)
+  return json.dumps({
+    "status": "success",
+    "emails": emails,
+  })
 
 
 
 
 @app.route('/api/email/<sender>/<timestamp>', methods=['GET', 'PATCH'])
 def email(sender, timestamp):
-  global db_name, mbox_path
+  global db_path, mbox_path
 
   mbox = mailbox.mbox(mbox_path)
-  conn = sqlite3.connect(db_name)
+  conn = sqlite3.connect(db_path)
 
   if (request.method == "PATCH"):
     data = json.loads(request.data)

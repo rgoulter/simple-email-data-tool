@@ -3,6 +3,8 @@ from expects import expect, equal
 
 from specs.context import email_db
 
+import json
+
 import mailbox
 
 from os.path import abspath, join
@@ -14,6 +16,8 @@ from subprocess import Popen, PIPE, TimeoutExpired
 import subprocess
 
 import sys
+
+import time
 
 from tempfile import TemporaryDirectory
 
@@ -28,6 +32,7 @@ with description('Corpus Server') as self:
         flask_app = abspath("corpus_server.py")
         env = {
           "FLASK_APP": flask_app,
+          "PATH": os.environ["PATH"],
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
@@ -48,14 +53,74 @@ with description('Corpus Server') as self:
         env = {
           "FLASK_APP": flask_app,
           "CORPUS_MBOX": empty_mbox_path,
+          "PATH": os.environ["PATH"]
         }
         if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
           env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
 
-        server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+        # response = requests.get("http://localhost:5000/status")
+        # expect(response.status_code).to(equal(200))
+        try:
+          server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-        response = requests.get("http://localhost:5000/status")
-        expect(response.status_code).to(equal(200))
+          response = requests.get("http://localhost:5000/status")
+          expect(response.status_code).to(equal(200))
 
-        server.kill()
-        outs, errs = server.communicate()
+        finally:
+          server.kill()
+          outs, errs = server.communicate()
+
+    with it('is able to return /api/emails successfully with empty result'):
+      with TemporaryDirectory() as tmpd:
+        flask_app = abspath("corpus_server.py")
+        empty_mbox_path = join(tmpd, "empty.mbox")
+        empty_mbox = mailbox.mbox(empty_mbox_path)
+        empty_mbox.close()
+        env = {
+          "FLASK_APP": flask_app,
+          "CORPUS_MBOX": empty_mbox_path,
+          "PATH": os.environ["PATH"]
+        }
+        if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+          env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+        try:
+          server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+          response = requests.get("http://localhost:5000/api/emails")
+          expect(response.status_code).to(equal(200))
+
+          data = json.loads(response.text)
+          expect(len(data["emails"])).to(equal(0))
+
+        finally:
+          server.kill()
+          outs, errs = server.communicate()
+
+  with context('run with specs/happy.mbox, but no DB'):
+    with it('is able to return /api/emails successfully with 3 results'):
+      with TemporaryDirectory() as tmpd:
+        flask_app = abspath("corpus_server.py")
+        mbox_path = abspath("specs/happy.mbox")
+        db_path = join(tmpd, "test.db")
+        env = {
+          "FLASK_APP": flask_app,
+          "CORPUS_MBOX": mbox_path,
+          "CORPUS_DB": db_path,
+          "PATH": os.environ["PATH"]
+        }
+        if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+          env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+        try:
+          server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+          response = requests.get("http://localhost:5000/api/emails")
+          expect(response.status_code).to(equal(200))
+
+          data = json.loads(response.text)
+          expect(len(data["emails"])).to(equal(3))
+
+        finally:
+          server.kill()
+          outs, errs = server.communicate()
