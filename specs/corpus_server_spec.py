@@ -1,5 +1,5 @@
 from mamba import description, context, it
-from expects import expect, equal
+from expects import contain, expect, equal
 
 from specs.context import email_db
 
@@ -11,6 +11,8 @@ from os.path import abspath, join
 import os
 
 import requests
+
+import sqlite3
 
 from subprocess import Popen, PIPE, TimeoutExpired
 import subprocess
@@ -146,7 +148,7 @@ with description('Corpus Server') as self:
             response = requests.get("http://localhost:5000/api/email/foo@bar.com/1546344000/plain")
             expect(response.status_code).to(equal(200))
 
-            # XXX assert text contents
+            expect(response.text).to(contain("First message."))
           finally:
             server.kill()
             outs, errs = server.communicate()
@@ -171,7 +173,7 @@ with description('Corpus Server') as self:
             response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/plain")
             expect(response.status_code).to(equal(200))
 
-            # XXX assert text contents
+            expect(response.text).to(contain("Second message."))
           finally:
             server.kill()
             outs, errs = server.communicate()
@@ -196,7 +198,8 @@ with description('Corpus Server') as self:
             response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/html")
             expect(response.status_code).to(equal(200))
 
-            # XXX assert text contents
+            expect(response.text).to(contain("Second message."))
+            expect(response.text).to(contain("<p>"))
           finally:
             server.kill()
             outs, errs = server.communicate()
@@ -221,7 +224,36 @@ with description('Corpus Server') as self:
             response = requests.get("http://localhost:5000/api/email/foo3@baz.com/1546516920/html")
             expect(response.status_code).to(equal(200))
 
-            # XXX assert text contents
+            expect(response.text).to(contain("HTML only message."))
+          finally:
+            server.kill()
+            outs, errs = server.communicate()
+
+    if sqlite3.sqlite_version >= "3.24":
+      with it('PATCH /api/email/foo@bar.com/1546344000/plain'):
+        with TemporaryDirectory() as tmpd:
+          flask_app = abspath("corpus_server.py")
+          mbox_path = abspath("specs/happy.mbox")
+          db_path = join(tmpd, "test.db")
+          env = {
+            "FLASK_APP": flask_app,
+            "CORPUS_MBOX": mbox_path,
+            "CORPUS_DB": db_path,
+            "PATH": os.environ["PATH"]
+          }
+          if 'SYSTEMROOT' in os.environ:  # Windows http://bugs.python.org/issue20614
+            env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
+
+          try:
+            server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+
+            req_data = json.dumps({
+              "note": "updated note"
+            })
+            response = requests.patch("http://localhost:5000/api/email/foo@bar.com/1546344000", data = req_data)
+            expect(response.status_code).to(equal(200))
+
+            expect(response.text).to(contain("updated"))
           finally:
             server.kill()
             outs, errs = server.communicate()
