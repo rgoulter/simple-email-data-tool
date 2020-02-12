@@ -9,7 +9,7 @@ script:
 - env
 - which mamba
 - which flask
-- mamba
+- env CI=travis mamba
 
 notifications:
   email: false
