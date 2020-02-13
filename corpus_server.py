@@ -77,6 +77,16 @@ def emails():
 
   emails = email_db.fetch_emails_info(conn, mbox)
 
+  after = request.args.get("after")
+  before = request.args.get("before")
+
+  if after is not None:
+    afterts = int(after)
+    emails = [e for e in emails if e["timestamp"] >= afterts]
+  if before is not None:
+    beforets = int(before)
+    emails = [e for e in emails if e["timestamp"] < beforets]
+
   mbox.close()
   conn.close()
 
