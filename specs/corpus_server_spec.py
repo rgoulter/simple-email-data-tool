@@ -21,9 +21,11 @@ from specs.context import email_db
 
 
 
+
 @retry(wait_fixed=2000, stop_max_delay=30000)
 def wait_for_server(uri = "http://localhost:5000/status"):
   response = requests.get(uri)
+
 
 
 
@@ -119,6 +121,8 @@ with description('Corpus Server') as self:
         data = json.loads(response.text)
         expect(len(data["emails"])).to(equal(3))
 
+
+
     with context('/api/email/<sender>/<timestamp>/<content>'):
       with it('/api/email/foo@bar.com/1546344000/plain'):
         mbox_path = abspath("specs/happy.mbox")
@@ -128,6 +132,7 @@ with description('Corpus Server') as self:
 
             expect(response.text).to(contain("First message."))
 
+
       with it('/api/email/foo2@bar.com/1546344060/plain'):
         mbox_path = abspath("specs/happy.mbox")
         with corpus_server(mbox_path = mbox_path) as server_info:
@@ -135,6 +140,7 @@ with description('Corpus Server') as self:
           expect(response.status_code).to(equal(200))
 
           expect(response.text).to(contain("Second message."))
+
 
       with it('/api/email/foo2@bar.com/1546344060/html'):
         mbox_path = abspath("specs/happy.mbox")
@@ -145,6 +151,7 @@ with description('Corpus Server') as self:
           expect(response.text).to(contain("Second message."))
           expect(response.text).to(contain("<p>"))
 
+
       with it('/api/email/foo3@baz.com/1546516920/html'):
         mbox_path = abspath("specs/happy.mbox")
         with corpus_server(mbox_path = mbox_path) as server_info:
@@ -152,6 +159,8 @@ with description('Corpus Server') as self:
           expect(response.status_code).to(equal(200))
 
           expect(response.text).to(contain("HTML only message."))
+
+
 
     if sqlite3.sqlite_version >= "3.24":
       with it('PATCH /api/email/foo@bar.com/1546344000/plain'):
