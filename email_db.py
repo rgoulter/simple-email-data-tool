@@ -1,7 +1,5 @@
 import datetime
-import mailbox
 import re
-import sqlite3
 
 from dateutil.parser import parse
 
@@ -76,7 +74,7 @@ def namedtuple_from_mbox_mail(m):
   datetimetz = parse(m['Date'])
   subject = str(m['Subject'])
 
-  return Email(sender = sender, datetimetz = datetimetz, subject = subject)
+  return Email(sender=sender, datetimetz=datetimetz, subject=subject)
 
 
 def insert_mbox_into_connection(mbox, conn):

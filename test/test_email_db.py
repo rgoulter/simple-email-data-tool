@@ -53,7 +53,6 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo@bar.com'
     timestamp = 1546344000
-    subject = 'Foo Bar'
     has_plain = email_db.has_plain(mbox, sender, timestamp)
     has_html = email_db.has_html(mbox, sender, timestamp)
 
@@ -71,7 +70,6 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo3@baz.com'
     timestamp = 1546516920
-    subject = 'Foo3 Bar'
     has_plain = email_db.has_plain(mbox, sender, timestamp)
     has_html = email_db.has_html(mbox, sender, timestamp)
 
@@ -89,7 +87,6 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo2@bar.com'
     timestamp = 1546344060
-    subject = 'Foo2 Bar'
     has_plain = email_db.has_plain(mbox, sender, timestamp)
     has_html = email_db.has_html(mbox, sender, timestamp)
 
@@ -107,7 +104,6 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo@bar.com'
     timestamp = 1546344000
-    note = 'new note'
     info = email_db.fetch_email_info(self.conn, self.mbox, sender, timestamp)
 
     # ASSERT
@@ -142,7 +138,6 @@ class TestFlaskApiMethods(unittest.TestCase):
     # ACT
     sender = 'foo@bar.com'
     timestamp = 1546344000
-    subject = 'Foo Bar'
     note = 'new note'
     email_db.update_note(self.conn, self.mbox, sender, timestamp, 'x')
     email_db.update_note(self.conn, self.mbox, sender, timestamp, note)

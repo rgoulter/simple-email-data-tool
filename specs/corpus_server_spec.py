@@ -2,39 +2,35 @@ import json
 import mailbox
 import os
 import sqlite3
-import subprocess
-import sys
 
 import requests
 
-from codecs import encode, decode
+from codecs import decode
 from contextlib import contextmanager
 from os.path import abspath, join
-from subprocess import PIPE, Popen, TimeoutExpired
+from subprocess import PIPE, Popen
 from tempfile import TemporaryDirectory
 
-from mamba import context, description, fit, it
+from mamba import context, description, it
 from expects import contain, equal, expect
 from retrying import retry
-
-from specs.context import email_db
 
 
 
 
 @retry(wait_fixed=2000, stop_max_delay=30000)
-def wait_for_server(uri = "http://localhost:5000/status"):
-  response = requests.get(uri)
+def wait_for_server(uri="http://localhost:5000/status"):
+  requests.get(uri)
 
 
 
 
 @contextmanager
 def corpus_server(
-  mbox_path = None,
-  db_path = None,
-  flask_app = abspath("corpus_server.py"),
-  wait = True,
+  mbox_path=None,
+  db_path=None,
+  flask_app=abspath("corpus_server.py"),
+  wait=True,
 ):
   with TemporaryDirectory() as tmpd:
     if mbox_path is None:
@@ -55,7 +51,7 @@ def corpus_server(
       env[str('SYSTEMROOT')] = os.environ['SYSTEMROOT']
 
     try:
-      server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
+      server = Popen(["flask", "run"], cwd=tmpd, env=env, stdout=PIPE, stderr=PIPE)
 
       if wait:
         wait_for_server()
@@ -87,7 +83,7 @@ def corpus_server(
 with description('Corpus Server') as self:
   with context('run in a directory with no mbox or DB'):
     with it('fails to run the server'):
-      with corpus_server(mbox_path = "nonex.mbox", wait = False) as server_info:
+      with corpus_server(mbox_path="nonex.mbox", wait=False) as server_info:
         poll = server_info["proc"].wait(timeout=30)
 
         expect(poll).to(equal(1))
@@ -114,7 +110,7 @@ with description('Corpus Server') as self:
   with context('run with specs/happy.mbox, but no DB'):
     with it('is able to return /api/emails successfully with 3 results'):
       mbox_path = abspath("specs/happy.mbox")
-      with corpus_server(mbox_path = mbox_path) as server_info:
+      with corpus_server(mbox_path=mbox_path) as server_info:
         response = requests.get("http://localhost:5000/api/emails")
         expect(response.status_code).to(equal(200))
 
@@ -126,7 +122,7 @@ with description('Corpus Server') as self:
     with context('/api/email/<sender>/<timestamp>/<content>'):
       with it('/api/email/foo@bar.com/1546344000/plain'):
         mbox_path = abspath("specs/happy.mbox")
-        with corpus_server(mbox_path = mbox_path) as server_info:
+        with corpus_server(mbox_path=mbox_path) as server_info:
             response = requests.get("http://localhost:5000/api/email/foo@bar.com/1546344000/plain")
             expect(response.status_code).to(equal(200))
 
@@ -135,7 +131,7 @@ with description('Corpus Server') as self:
 
       with it('/api/email/foo2@bar.com/1546344060/plain'):
         mbox_path = abspath("specs/happy.mbox")
-        with corpus_server(mbox_path = mbox_path) as server_info:
+        with corpus_server(mbox_path=mbox_path) as server_info:
           response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/plain")
           expect(response.status_code).to(equal(200))
 
@@ -144,7 +140,7 @@ with description('Corpus Server') as self:
 
       with it('/api/email/foo2@bar.com/1546344060/html'):
         mbox_path = abspath("specs/happy.mbox")
-        with corpus_server(mbox_path = mbox_path) as server_info:
+        with corpus_server(mbox_path=mbox_path) as server_info:
           response = requests.get("http://localhost:5000/api/email/foo2@bar.com/1546344060/html")
           expect(response.status_code).to(equal(200))
 
@@ -154,7 +150,7 @@ with description('Corpus Server') as self:
 
       with it('/api/email/foo3@baz.com/1546516920/html'):
         mbox_path = abspath("specs/happy.mbox")
-        with corpus_server(mbox_path = mbox_path) as server_info:
+        with corpus_server(mbox_path=mbox_path) as server_info:
           response = requests.get("http://localhost:5000/api/email/foo3@baz.com/1546516920/html")
           expect(response.status_code).to(equal(200))
 
@@ -165,11 +161,11 @@ with description('Corpus Server') as self:
     if sqlite3.sqlite_version >= "3.24":
       with it('PATCH /api/email/foo@bar.com/1546344000/plain'):
         mbox_path = abspath("specs/happy.mbox")
-        with corpus_server(mbox_path = mbox_path) as server_info:
+        with corpus_server(mbox_path=mbox_path) as server_info:
           req_data = json.dumps({
             "note": "updated note"
           })
-          response = requests.patch("http://localhost:5000/api/email/foo@bar.com/1546344000", data = req_data)
+          response = requests.patch("http://localhost:5000/api/email/foo@bar.com/1546344000", data=req_data)
           expect(response.status_code).to(equal(200))
 
           expect(response.text).to(contain("updated"))

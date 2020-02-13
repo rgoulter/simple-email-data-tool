@@ -1,7 +1,5 @@
-import re
 import unittest
 
-from .context import email_db
 from email_db import email_of_from
 
 

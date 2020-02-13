@@ -1,0 +1,16 @@
+[flake8]
+# E111 = indentation must be multiple of 4
+# E114 = indentation must be multiple of 4 (comments)
+# E121 = continuation indents
+# E303 = too many blank lines
+# E501 = line too long
+ignore = E111, E114, E121, E303, E501
+exclude =
+  filter_mbox_to_week.py,
+  iterate_on_unprocessed.py,
+  itunes.py,
+  kobo.py,
+  playstation.py,
+  main.py,
+  receipt_scraper.py,
+  steam.py
