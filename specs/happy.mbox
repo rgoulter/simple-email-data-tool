@@ -1,0 +1,92 @@
+From MAILER-DAEMON Wed Feb 12 11:54:32 2020
+Subject: Foo Bar
+From: Foo Bar <foo@bar.com>
+Date: Tue, 01 Jan 2019 12:00:00 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hi,
+
+First message.
+
+Regards,
+Sender
+
+From MAILER-DAEMON Wed Feb 12 11:54:32 2020
+Content-Type: multipart/mixed; boundary="===============1602477251998784918=="
+MIME-Version: 1.0
+Subject: Foo2 Bar
+From: foo2@bar.com
+Date: Tue, 01 Jan 2019 12:01:00 +0000
+
+--===============1602477251998784918==
+Content-Type: multipart/alternative; boundary="===============0498442328371279220=="
+MIME-Version: 1.0
+
+--===============0498442328371279220==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi
+
+Second message.
+
+Regards,
+Sender
+--===============0498442328371279220==
+Content-Type: multipart/related; boundary="===============8901468107136605347=="
+MIME-Version: 1.0
+
+--===============8901468107136605347==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+
+  <!DOCTYPE HTML>
+<html>
+  <body>
+    <p>Hi,</p>
+    <p>Second message.</p>
+    <p>Regards,<br/>Sender</p>
+  </body>
+</html>
+  
+--===============8901468107136605347==--
+
+--===============0498442328371279220==--
+
+--===============1602477251998784918==--
+
+From MAILER-DAEMON Wed Feb 12 11:54:32 2020
+Content-Type: multipart/mixed; boundary="===============1540831233228776225=="
+MIME-Version: 1.0
+Subject: Foo3 Bar
+From: foo3@baz.com
+Date: Thu, 03 Jan 2019 12:02:00 +0000
+
+--===============1540831233228776225==
+Content-Type: multipart/related; boundary="===============0208093545728246674=="
+MIME-Version: 1.0
+
+--===============0208093545728246674==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+
+<!DOCTYPE HTML>
+<html>
+  <body>
+    <p>Hi,</p>
+    <p>HTML only message.</p>
+    <p>Regards,<br/>Sender</p>
+  </body>
+</html>
+  
+--===============0208093545728246674==--
+
+--===============1540831233228776225==--
+

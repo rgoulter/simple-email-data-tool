@@ -128,18 +128,18 @@ def fetch_emails_info(conn, mbox):
   for row in rows:
     (res_from_email, res_date, res_timestamp, res_subject, res_note) = row
 
-    plaintext = has_plain(mbox, sender, timestamp, subject)
-    html = has_html(mbox, sender, timestamp, subject)
+    plaintext = has_plain(mbox, res_from_email, res_timestamp)
+    html = has_html(mbox, res_from_email, res_timestamp)
 
-    result << {
-       'from': res_from_email,
-       'timestamp': int(res_timestamp),
-       'datetime': res_date,
-       'subject': res_subject,
-       'plain': plaintext,
-       'html': html,
-       'note': res_note
-      }
+    result.append({
+     'from': res_from_email,
+     'timestamp': int(res_timestamp),
+     'datetime': res_date,
+     'subject': res_subject,
+     'plain': plaintext,
+     'html': html,
+     'note': res_note
+    })
 
   return result
 

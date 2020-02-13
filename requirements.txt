@@ -1,5 +1,7 @@
 expects
 flask
+ipdb
 mamba
 python-dateutil
 requests
+retrying
