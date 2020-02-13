@@ -4,19 +4,26 @@ import os
 import sqlite3
 import subprocess
 import sys
-import time
 
 import requests
 
+from codecs import encode, decode
 from contextlib import contextmanager
 from os.path import abspath, join
 from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import TemporaryDirectory
 
-from mamba import context, description, it
+from mamba import context, description, fit, it
 from expects import contain, equal, expect
+from retrying import retry
 
 from specs.context import email_db
+
+
+
+@retry(wait_fixed=2000, stop_max_delay=30000)
+def wait_for_server(uri = "http://localhost:5000/status"):
+  response = requests.get(uri)
 
 
 
@@ -24,7 +31,8 @@ from specs.context import email_db
 def corpus_server(
   mbox_path = None,
   db_path = None,
-  flask_app = abspath("corpus_server.py")
+  flask_app = abspath("corpus_server.py"),
+  wait = True,
 ):
   with TemporaryDirectory() as tmpd:
     if mbox_path is None:
@@ -47,10 +55,8 @@ def corpus_server(
     try:
       server = Popen(["flask", "run"], cwd = tmpd, env = env, stdout = PIPE, stderr = PIPE)
 
-      # Wait for Server to be ready
-      # XXX
-      if os.environ.get("CI"):
-        time.sleep(5)
+      if wait:
+        wait_for_server()
 
       info = {
         "proc": server,
@@ -58,12 +64,16 @@ def corpus_server(
         "tmpd": tmpd,
       }
       yield info
-    except AssertionError:
+    except (AssertionError, requests.ConnectionError):
+      server.kill()
+      outs, errs = server.communicate(timeout=5)
       print("Assertion failed in ctx mgr")
-      print("server STDOUT:")
-      print(server.stdout.decode("unicode_escape"))
-      print("server STDERR:")
-      print(server.stderr.decode("unicode_escape"))
+      if outs is not None:
+        print("server STDOUT:")
+        print(decode(outs, 'utf-8', 'replace'))
+      if errs is not None:
+        print("server STDERR:")
+        print(decode(errs, 'utf-8', 'replace'))
       raise
     finally:
       server.kill()
@@ -73,10 +83,9 @@ def corpus_server(
 
 
 with description('Corpus Server') as self:
-  # n.b. Python/mamba doesn't allow sharing variables here?!
   with context('run in a directory with no mbox or DB'):
     with it('fails to run the server'):
-      with corpus_server(mbox_path = "nonexistant.mbox") as server_info:
+      with corpus_server(mbox_path = "nonex.mbox", wait = False) as server_info:
         poll = server_info["proc"].wait(timeout=30)
 
         expect(poll).to(equal(1))
