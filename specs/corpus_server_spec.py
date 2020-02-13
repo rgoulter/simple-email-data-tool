@@ -1,28 +1,22 @@
-from mamba import description, context, it
-from expects import contain, expect, equal
-
-from specs.context import email_db
-
 import json
-
 import mailbox
-
-from os.path import abspath, join
 import os
+import sqlite3
+import subprocess
+import sys
+import time
 
 import requests
 
-import sqlite3
-
-from subprocess import Popen, PIPE, TimeoutExpired
-import subprocess
-
-import sys
-
-import time
-
+from contextlib import contextmanager
+from os.path import abspath, join
+from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import TemporaryDirectory
 
+from mamba import context, description, it
+from expects import contain, equal, expect
+
+from specs.context import email_db
 
 
 with description('Corpus Server') as self:
