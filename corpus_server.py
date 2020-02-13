@@ -5,14 +5,11 @@ import json
 import mailbox
 
 from os import getenv
-import os
 from os.path import abspath, dirname, isfile, join
-
-import requests
 
 import sqlite3
 
-from subprocess import Popen, run
+from subprocess import run
 
 import sys
 
@@ -50,7 +47,7 @@ if not isfile(db_path):
 
 
 static_folder = join(dirname(__file__), "corpus-client/build/")
-app = Flask(__name__, static_folder = static_folder)
+app = Flask(__name__, static_folder=static_folder)
 
 
 
@@ -125,4 +122,4 @@ def email_content(sender, timestamp, content_subtype):
 
   mbox.close()
 
-  return Response(content[content_subtype], mimetype = "text/" + content_subtype)
+  return Response(content[content_subtype], mimetype="text/" + content_subtype)
