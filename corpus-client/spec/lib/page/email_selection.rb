@@ -24,7 +24,7 @@ module Page
           sender == tr.find(".from").text &&
           subject == tr.find(".subject").text
         end
-        tr.click
+        tr.first('td').click
       end
     end
   end
