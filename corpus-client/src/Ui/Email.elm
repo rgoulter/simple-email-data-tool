@@ -1,7 +1,17 @@
 {-
-  UI for the Email: content, and note, summary?.
+  UI for the Email: content, and note, summary.
 -}
-module Ui.Email exposing (..)
+module Ui.Email exposing
+  ( Model
+  , Msg
+  , empty
+  , init
+  , getEmail
+  , getFailure
+  , setEmail
+  , update
+  , view
+  )
 
 import Email exposing (Email, emailDecoder)
 

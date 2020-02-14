@@ -1,4 +1,16 @@
-module Ui.EmailSelection exposing (..)
+module Ui.EmailSelection exposing
+  ( Model
+  , Msg
+  , init
+  , empty
+  , getEmails
+  , getFailure
+  , getSelection
+  , isLoading
+  , update
+  , updateEmail
+  , view
+  )
 
 import Array exposing (Array)
 import Array
