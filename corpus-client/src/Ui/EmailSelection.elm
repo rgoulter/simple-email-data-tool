@@ -7,6 +7,7 @@ module Ui.EmailSelection exposing
   , getFailure
   , getSelection
   , isLoading
+  , modelFromEmails
   , setSelection
   , update
   , view
@@ -90,6 +91,14 @@ setSelection model index updatedEmail =
 
     _ -> model
 
+
+-- Helper method for the Showcase.
+modelFromEmails : Int -> Array Email -> Model
+modelFromEmails selected emails =
+  if selected > Array.length emails then
+    Empty
+  else
+    Success { selected = selected, emails = emails }
 
 
 

@@ -4,6 +4,8 @@
 -}
 module Showcase exposing (..)
 
+import Array exposing (Array)
+
 import Browser
 import Browser.Navigation as Nav
 
@@ -20,13 +22,12 @@ import Url.Parser exposing ((<?>), (</>))
 import Url.Parser as Url
 import Url.Parser.Query as Query
 
+import Email exposing (Email, sampleEmails)
+import Ui.Bulma exposing (bulmaCentered, withStyle)
+import Ui.EmailSelection
 import Main exposing
-  ( Email
-  , bulmaCentered
-  , viewErrorMessage
+  ( viewErrorMessage
   , viewLoading
-  , viewSelectEmails
-  , withStyle
   )
 
 
@@ -78,8 +79,11 @@ init _ url key =
 -- UPDATE
 
 
-type Msg = UrlChanged
-         | UrlRequested
+type Msg
+  = UrlChanged
+  | UrlRequested
+  | EmailSelectionMsg Ui.EmailSelection.Msg
+  | MainMsg Main.Msg
 
 
 update msg model = (model, Cmd.none)
@@ -119,14 +123,17 @@ viewComponents components =
     [] -> viewHelpText
     component::_ -> viewComponent component
 
+viewSelectEmails : Array Email -> Html Msg
+viewSelectEmails emails =
+  Ui.EmailSelection.modelFromEmails 1 emails
+    |> Ui.EmailSelection.view
+    |> Html.map EmailSelectionMsg
+
 
 viewComponent component =
   case component of
     "error" -> bulmaCentered [viewErrorMessage "example error"]
     "emails" ->
-      bulmaCentered [viewSelectEmails [ { from = "foo@bar.com", datetime = "2020-01-01", subject = "foo" }
-                                      , { from = "bar@baz.com", datetime = "2020-01-01", subject = "foo" }
-                                      , { from = "baz@foo.com", datetime = "2020-01-01", subject = "foo" }
-                                      ]]
-    "loading" -> viewLoading
+      bulmaCentered [viewSelectEmails sampleEmails]
+    "loading" -> Html.map MainMsg viewLoading
     _ -> div [] [text (String.concat ["Unknown component: ", component])]

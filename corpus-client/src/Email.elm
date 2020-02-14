@@ -21,6 +21,36 @@ type alias Email =
 
 
 
+sampleEmails : Array Email
+sampleEmails = Array.fromList
+  [ { from = "foo@bar.com"
+    , datetime = "2019-01-01T12:00:00+0000"
+    , subject = "Foo Bar"
+    , timestamp = 1546344060
+    , note = ""
+    , plain = True
+    , html = False
+    }
+  , { from = "foo2@bar.com"
+    , datetime = "2019-01-01T12:01:00+0000"
+    , subject = "Foo2 Bar"
+    , timestamp = 1546344120
+    , note = ""
+    , plain = True
+    , html = True
+    }
+  , { from = "foo3@baz.com"
+    , datetime = "2019-01-03T12:02:00+0000"
+    , subject = "Foo3 Bar"
+    , timestamp = 1546516980
+    , note = ""
+    , plain = False
+    , html = True
+    }
+  ]
+
+
+
 
 -- JSON DECODE
 
