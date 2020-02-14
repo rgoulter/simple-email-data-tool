@@ -26,6 +26,15 @@ module Page
         end
         tr.first('td').click
       end
+
+      def selected_email()
+        tr = find("#{EMAILS_SELECTOR} tr.is-selected")
+        {
+          datetime: tr.find(".datetime").text,
+          sender: tr.find(".from").text,
+          subject: tr.find(".subject").text,
+        }
+      end
     end
   end
 end
