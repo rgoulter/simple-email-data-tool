@@ -24,6 +24,7 @@ import Url.Parser.Query as Query
 
 import Email exposing (Email, sampleEmails)
 import Ui.Bulma exposing (bulmaCentered, withStyle)
+import Ui.DateFilter
 import Ui.EmailSelection
 import Main exposing
   ( viewErrorMessage
@@ -50,8 +51,10 @@ main =
 -- MODEL
 
 
-type Model
-  = ShowComponents (List String)
+type alias Model
+  = { dateFilter : Ui.DateFilter.Model
+    , components : (List String)
+    }
 
 
 componentsFromQuery : Url.Url -> List String
@@ -72,8 +75,11 @@ init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
   let
     components = componentsFromQuery url
+    (dateFilter, dateFilterCmd) = Ui.DateFilter.init ()
   in
-  (ShowComponents components, Cmd.none)
+  ( { dateFilter = dateFilter, components = components }
+  , Cmd.map DateFilterMsg dateFilterCmd
+  )
 
 
 -- UPDATE
@@ -84,9 +90,19 @@ type Msg
   | UrlRequested
   | EmailSelectionMsg Ui.EmailSelection.Msg
   | MainMsg Main.Msg
+  | DateFilterMsg Ui.DateFilter.Msg
 
 
-update msg model = (model, Cmd.none)
+update msg model =
+  case msg of
+    DateFilterMsg dateFilterMsg ->
+      let
+        (dateFilter, dateFilterCmd) =
+          Ui.DateFilter.update dateFilterMsg model.dateFilter
+      in
+      ({ model | dateFilter = dateFilter}, Cmd.map DateFilterMsg dateFilterCmd)
+
+    _ -> (model, Cmd.none)
 
 
 
@@ -110,17 +126,16 @@ view model =
 
 styledView : Model -> Html Msg
 styledView model =
-  case model of
-    ShowComponents components ->
-      viewComponents components
+  viewComponents model
 
 
 viewHelpText = div [] [text "No components given. Use components parameter."]
 
 
-viewComponents components =
+viewComponents { components, dateFilter } =
   case components of
     [] -> viewHelpText
+    "datefilter"::_ -> viewDateFilter dateFilter
     component::_ -> viewComponent component
 
 viewSelectEmails : Array Email -> Html Msg
@@ -128,6 +143,12 @@ viewSelectEmails emails =
   Ui.EmailSelection.modelFromEmails 1 emails
     |> Ui.EmailSelection.view
     |> Html.map EmailSelectionMsg
+
+
+
+viewDateFilter : Ui.DateFilter.Model -> Html Msg
+viewDateFilter dateFilter =
+  Html.map DateFilterMsg <| Ui.DateFilter.view dateFilter
 
 
 viewComponent component =
