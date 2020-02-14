@@ -7,6 +7,7 @@ module Ui.EmailSelection exposing
   , getFailure
   , getSelection
   , isLoading
+  , modelFromEmails
   , setSelection
   , update
   , view
@@ -19,6 +20,7 @@ import Email exposing (Email, emailsDecoder)
 
 import Html as H
 import Html.Attributes as A
+import Html.Events as E
 import Html exposing (Html, div, text, select, option)
 import Html.Attributes exposing (class)
 import Html.Events.Extra exposing (onChange)
@@ -91,6 +93,14 @@ setSelection model index updatedEmail =
     _ -> model
 
 
+-- Helper method for the Showcase.
+modelFromEmails : Int -> Array Email -> Model
+modelFromEmails selected emails =
+  if selected > Array.length emails then
+    Empty
+  else
+    Success { selected = selected, emails = emails }
+
 
 
 -- UPDATE
@@ -145,21 +155,27 @@ update msg model =
 view : Model -> Html Msg
 view model =
    case model of
-     Success { emails } ->
+     Success { emails, selected } ->
        let
-         humanFriendlyEmailString datetime from subject =
-           datetime ++ " " ++ from ++ ": " ++ subject
-         option_from_email = \index { from, datetime, subject } ->
-           option [A.value (String.fromInt index)]
-                  [text (humanFriendlyEmailString datetime from subject)]
-         options = Array.toList (Array.indexedMap option_from_email emails)
-         handleInput msg =
-           case String.toInt msg of
-             Nothing -> Noop
-             Just index -> SelectEmail index
+         trow_from_email = \index { from, datetime, subject } ->
+           let
+             selectedAttr = if index == selected then [class "is-selected"] else []
+             selectAttr = E.onClick (SelectEmail index)
+             trAttrs = [selectAttr] ++ selectedAttr
+           in
+           H.tr trAttrs
+                [ H.td [class "datetime", A.style "width" "15%"] [text datetime]
+                , H.td [class "from", A.style "width" "25%"] [text from]
+                , H.td [class "subject", A.style "width" "60%"] [text subject]
+                ]
+         trows = Array.toList (Array.indexedMap trow_from_email emails)
        in
-       div [class "select"]
-           [select [A.id "emails", onChange handleInput] options]
+       div [ A.style "overflow-y" "scroll"
+           , A.style "height" "200px"
+           ]
+           [ H.table [class "table", A.id "emails"]
+                     [H.tbody [] trows]
+           ]
 
      -- XXX: what *should* this be.
      _ -> text "loading"

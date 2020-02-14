@@ -1,5 +1,7 @@
 # n.b. see spec_helper for imports and constants
 
+require_relative 'lib/page/email_selection.rb'
+
 feature "viewing the contents of a selected email" do
   include_context "logger"
   include_context "runs elm reactor"
@@ -17,9 +19,7 @@ feature "viewing the contents of a selected email" do
 
     context "the first email is selected" do
       before(:example) do
-        # n.b. coupled to view
-        email = "2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar"
-        find('#emails').select(email)
+        Page::EmailSelection.select("2019-01-01T12:00:00+0000", "foo1@bar.com", "Foo Bar")
       end
 
       it "shows the contents for the email" do
@@ -31,9 +31,7 @@ feature "viewing the contents of a selected email" do
 
     context "the second email is selected" do
       before(:example) do
-        # n.b. coupled to view
-        email = "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar"
-        find('#emails').select(email)
+        Page::EmailSelection.select("2019-01-01T12:01:00+0000", "foo2@bar.com", "Foo2 Bar")
       end
 
       it "shows the contents for the email" do
@@ -56,9 +54,7 @@ feature "viewing the contents of a selected email" do
     context "an email with a text payload is selected" do
       context "plaintext" do
         before(:example) do
-          # n.b. coupled to view
-          email = "2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar"
-          find('#emails').select(email)
+          Page::EmailSelection.select("2019-01-01T12:00:00+0000", "foo1@bar.com", "Foo Bar")
         end
 
         it "only has plaintext tab enabled" do
@@ -71,9 +67,7 @@ feature "viewing the contents of a selected email" do
 
       context "html" do
         before(:example) do
-          # n.b. coupled to view
-          email = "2019-01-03T12:02:00+0000 foo3@baz.com: Foo3 Bar"
-          find('#emails').select(email)
+          Page::EmailSelection.select("2019-01-03T12:02:00+0000", "foo3@baz.com", "Foo3 Bar")
         end
 
         it "only has html tab enabled" do
@@ -94,9 +88,7 @@ feature "viewing the contents of a selected email" do
 
     context "an email with a multipart payload is selected" do
       before(:example) do
-        # n.b. coupled to view
-        email = "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar"
-        find('#emails').select(email)
+        Page::EmailSelection.select("2019-01-01T12:01:00+0000", "foo2@bar.com", "Foo2 Bar")
       end
 
       it "has both html and plaintext enabled" do
