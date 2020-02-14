@@ -1,7 +1,17 @@
 {-
-  UI for the Email: content, and note, summary?.
+  UI for the Email: content, and note, summary.
 -}
-module Ui.Email exposing (..)
+module Ui.Email exposing
+  ( Model
+  , Msg
+  , empty
+  , init
+  , getEmail
+  , getFailure
+  , setEmail
+  , update
+  , view
+  )
 
 import Email exposing (Email, emailDecoder)
 
@@ -57,15 +67,13 @@ getEmail model =
     _ -> Nothing
 
 
-setEmail : Model -> Maybe Email -> Model
-setEmail model maybeEmail =
+setEmail : Model -> Email -> Model
+setEmail model email =
   -- Unhandled race condition: 'loading' an email, but set a new one
-  case maybeEmail of
-    Just email -> HasEmail { email = email
-                           , loading = False
-                           , content = defaultContentForEmail email
-                           }
-    Nothing -> NoEmail
+  HasEmail { email = email
+           , loading = False
+           , content = defaultContentForEmail email
+           }
 
 
 

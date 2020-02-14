@@ -1,4 +1,16 @@
-module Ui.EmailSelection exposing (..)
+module Ui.EmailSelection exposing
+  ( Model
+  , Msg
+  , init
+  , empty
+  , getEmails
+  , getFailure
+  , getSelection
+  , isLoading
+  , setSelection
+  , update
+  , view
+  )
 
 import Array exposing (Array)
 import Array
@@ -70,8 +82,8 @@ getSelection model =
     _ -> Nothing
 
 
-updateEmail : Model -> Int -> Email -> Model
-updateEmail model index updatedEmail =
+setSelection : Model -> Int -> Email -> Model
+setSelection model index updatedEmail =
   case model of
     Success emails ->
       Success { emails | emails = Array.set index updatedEmail emails.emails }

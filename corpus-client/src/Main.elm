@@ -44,7 +44,7 @@ init _ =
     (initEmail, _) = Ui.Email.init ()
   in
   ( { failure = Nothing, selection = initSelection, email = initEmail }
-  , Cmd.map EmailSelection initCmd
+  , Cmd.map EmailSelectionMsg initCmd
   )
 
 
@@ -54,82 +54,62 @@ init _ =
 
 
 type Msg
-  = EmailSelection Ui.EmailSelection.Msg
-  | Email Int Ui.Email.Msg
+  = EmailSelectionMsg Ui.EmailSelection.Msg
+  | EmailMsg Int Ui.Email.Msg
   | Noop
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Email index emailMsg ->
+    EmailMsg index emailMsg ->
       let
         (emailModel, emailCmd) = Ui.Email.update emailMsg model.email
+        mainCmd = Cmd.map (\c -> EmailMsg index c) emailCmd
+        emailFailure = Ui.Email.getFailure emailModel
+        -- Lift the failure from Ui.Email into the main Model
+        updatedModel = { model | email = emailModel, failure = emailFailure }
       in
-      case (Ui.Email.getFailure emailModel, Ui.Email.getEmail emailModel) of
-        -- I think this assumes that the model.failure was related to Email,
-        -- and not due to other components.
-        (Nothing, Nothing) ->
-          ( { model
-            | email = emailModel
-            , failure = Nothing
+      case Ui.Email.getEmail emailModel of
+        -- Email.Msg might indicate that the Ui.Email widget updated the
+        -- Email, so the Ui.EmailSelection model needs to be updated.
+        Just updatedEmail ->
+          ( { updatedModel
+            | selection = Ui.EmailSelection.setSelection model.selection index updatedEmail
             }
-          , Cmd.map (\c -> Email index c) emailCmd
+          , mainCmd
           )
 
-        (Nothing, Just updatedEmail) ->
-          let
-            updatedSelection =
-              Ui.EmailSelection.updateEmail model.selection index updatedEmail
-          in
-          ( { model
-            | email = emailModel
-            , selection = updatedSelection
-            , failure = Nothing
-            }
-          , Cmd.map (\c -> Email index c) emailCmd
-          )
-
-        (emailFailure, _) ->
-          ( { model
-            | email = emailModel
-            , failure = emailFailure
-            }
-          , Cmd.map (\c -> Email index c) emailCmd
-          )
+        -- Since the Ui.Email widget doesn't have an email selected,
+        --  the update to the Model is straightforward.
+        Nothing -> (updatedModel, mainCmd)
 
 
-    EmailSelection selectionMsg ->
+    EmailSelectionMsg selectionMsg ->
       let
         (emailSelectionModel, selectionCmd) = Ui.EmailSelection.update selectionMsg model.selection
+        selectionFailure = Ui.EmailSelection.getFailure emailSelectionModel
+        mainCmd = Cmd.map EmailSelectionMsg selectionCmd
+        updatedModel =
+          { model
+          | selection = emailSelectionModel
+          , failure = selectionFailure
+          }
       in
-        case ( Ui.EmailSelection.getFailure emailSelectionModel
-             , Ui.EmailSelection.getSelection emailSelectionModel
-             ) of
-          (Nothing, Just (index, email)) ->
-            ( { model
-              | email = Ui.Email.setEmail model.email (Just email)
-              , selection = emailSelectionModel
-              , failure = Nothing
-              }
-            , Cmd.none
-            )
+      case Ui.EmailSelection.getSelection emailSelectionModel of
+        -- EmailSelectionMsg with a selection might indicate that the
+        -- selected Email changed, so update the Ui.Email widget
+        Just (index, email) ->
+          ( { updatedModel
+            | email = Ui.Email.setEmail model.email email
+            }
+          , mainCmd
+          )
 
-          (Nothing, Nothing) ->
-            ( { model
-              | selection = emailSelectionModel
-              , failure = Nothing
-              }
-            , Cmd.map EmailSelection selectionCmd
-            )
+        -- Since the Ui.EmailSelection widget doesn't have a selected
+        --  Email, the update to the model is straightforward.
+        Nothing -> (updatedModel, mainCmd)
 
-          (selectionFailure, _) ->
-            ( { model
-              | selection = emailSelectionModel
-              , failure = selectionFailure
-              }
-            , Cmd.map EmailSelection selectionCmd
-            )
 
     Noop -> (model, Cmd.none)
 
@@ -205,13 +185,11 @@ viewNonLoadingNonFailing model =
     selection = Ui.EmailSelection.view model.selection
     email = Ui.Email.view model.email
     summary = viewSummary (Ui.EmailSelection.getEmails model.selection)
+    emailMsgToMsg =
+      case Ui.EmailSelection.getSelection model.selection of
+        Nothing -> \e -> Html.map (\_ -> Noop) e
+        Just (index, _) -> \e -> Html.map (\msg -> EmailMsg index msg) e
   in
-    case Ui.EmailSelection.getSelection model.selection of
-      Nothing ->
-        bulmaCentered ([Html.map EmailSelection selection] ++
-                       (List.map (\e -> Html.map (\_ -> Noop) e) email) ++
-                       [summary])
-      Just (index, _) ->
-        bulmaCentered ([Html.map EmailSelection selection] ++
-                       (List.map (\e -> Html.map (\msg -> Email index msg) e) email) ++
-                       [summary])
+    bulmaCentered ([Html.map EmailSelectionMsg selection] ++
+                   (List.map emailMsgToMsg email) ++
+                   [summary])
