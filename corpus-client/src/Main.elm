@@ -205,13 +205,11 @@ viewNonLoadingNonFailing model =
     selection = Ui.EmailSelection.view model.selection
     email = Ui.Email.view model.email
     summary = viewSummary (Ui.EmailSelection.getEmails model.selection)
+    emailMsgToMsg =
+      case Ui.EmailSelection.getSelection model.selection of
+        Nothing -> \e -> Html.map (\_ -> Noop) e
+        Just (index, _) -> \e -> Html.map (\msg -> EmailMsg index msg) e
   in
-    case Ui.EmailSelection.getSelection model.selection of
-      Nothing ->
-        bulmaCentered ([Html.map EmailSelectionMsg selection] ++
-                       (List.map (\e -> Html.map (\_ -> Noop) e) email) ++
-                       [summary])
-      Just (index, _) ->
-        bulmaCentered ([Html.map EmailSelectionMsg selection] ++
-                       (List.map (\e -> Html.map (\msg -> EmailMsg index msg) e) email) ++
-                       [summary])
+    bulmaCentered ([Html.map EmailSelectionMsg selection] ++
+                   (List.map emailMsgToMsg email) ++
+                   [summary])
