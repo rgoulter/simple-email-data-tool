@@ -8,6 +8,7 @@ module Ui.EmailSelection exposing
   , getSelection
   , isLoading
   , modelFromEmails
+  , navigate
   , setSelection
   , update
   , view
@@ -26,6 +27,8 @@ import Html.Attributes exposing (class)
 import Html.Events.Extra exposing (onChange)
 
 import Http
+
+import KeyboardNavigation
 
 
 
@@ -145,6 +148,29 @@ update msg model =
       case model of
         Success emails -> (Success { emails | selected = index }, Cmd.none)
         _ -> (model, Cmd.none)
+
+
+navigate : KeyboardNavigation.Direction -> Model -> (Model, Cmd Msg)
+navigate direction model =
+  case model of
+    Success { emails, selected } ->
+      let
+        newSelected =
+          case direction of
+            KeyboardNavigation.Previous -> selected - 1
+            KeyboardNavigation.Next -> selected + 1
+        clamp x min max =
+          if x < min then
+            min
+          else
+            if x >= max then
+              max - 1
+            else
+              x
+        clampedSelected = clamp newSelected 0 (Array.length emails)
+      in
+        (Success { emails = emails, selected = clampedSelected }, Cmd.none)
+    _ -> (model, Cmd.none)
 
 
 

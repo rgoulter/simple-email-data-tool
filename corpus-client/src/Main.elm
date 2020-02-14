@@ -5,6 +5,7 @@ import Browser
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 
+import KeyboardNavigation
 import Ui.Bulma exposing (bulmaCentered, bulmaDangerMessage, withStyle)
 import Ui.Email
 import Ui.EmailSelection
@@ -56,12 +57,41 @@ init _ =
 type Msg
   = EmailSelectionMsg Ui.EmailSelection.Msg
   | EmailMsg Int Ui.Email.Msg
+  | ChangeEmail KeyboardNavigation.Direction
   | Noop
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    ChangeEmail direction ->
+      let
+        (emailSelectionModel, selectionCmd) = Ui.EmailSelection.navigate direction model.selection
+        selectionFailure = Ui.EmailSelection.getFailure emailSelectionModel
+        mainCmd = Cmd.map EmailSelectionMsg selectionCmd
+        updatedModel =
+          { model
+          | selection = emailSelectionModel
+          , failure = selectionFailure
+          }
+      in
+      case Ui.EmailSelection.getSelection emailSelectionModel of
+        -- EmailSelectionMsg with a selection might indicate that the
+        -- selected Email changed, so update the Ui.Email widget
+        Just (index, email) ->
+          ( { updatedModel
+            | email = Ui.Email.setEmail model.email email
+            }
+          , mainCmd
+          )
+
+        -- Since the Ui.EmailSelection widget doesn't have a selected
+        --  Email, the update to the model is straightforward.
+        Nothing ->
+          -- XXX: may want to clear email from Ui.Email
+          (updatedModel, mainCmd)
+
+
     EmailMsg index emailMsg ->
       let
         (emailModel, emailCmd) = Ui.Email.update emailMsg model.email
@@ -183,13 +213,14 @@ viewLoading =
 viewNonLoadingNonFailing model =
   let
     selection = Ui.EmailSelection.view model.selection
-    email = Ui.Email.view model.email
-    summary = viewSummary (Ui.EmailSelection.getEmails model.selection)
+    handleKeyboard = ChangeEmail
     emailMsgToMsg =
       case Ui.EmailSelection.getSelection model.selection of
-        Nothing -> \e -> Html.map (\_ -> Noop) e
-        Just (index, _) -> \e -> Html.map (\msg -> EmailMsg index msg) e
+        Nothing -> \_ -> Noop
+        Just (index, _) -> \msg -> EmailMsg index msg
+    email = Ui.Email.view model.email handleKeyboard emailMsgToMsg
+    summary = viewSummary (Ui.EmailSelection.getEmails model.selection)
   in
     bulmaCentered ([Html.map EmailSelectionMsg selection] ++
-                   (List.map emailMsgToMsg email) ++
+                   email ++
                    [summary])

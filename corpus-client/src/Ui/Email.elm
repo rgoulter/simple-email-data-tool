@@ -18,6 +18,7 @@ import Email exposing (Email, emailDecoder)
 import Html as H
 import Html.Attributes as A
 import Html exposing (Html, div, text)
+import Html.Events as E
 import Html.Events exposing (onClick)
 import Html.Events.Extra exposing (onChange)
 
@@ -25,6 +26,7 @@ import Http
 
 import Json.Encode as Encode
 
+import KeyboardNavigation
 import Ui.Bulma exposing (bulmaCentered)
 
 
@@ -153,11 +155,13 @@ viewEmailContentTabs email selection =
   div [A.class "tabs"] [H.ul [] [plainTab, htmlTab]]
 
 
-viewNote : Email -> Html Msg
-viewNote email =
+viewNote : Email -> (KeyboardNavigation.Direction -> msg) -> (Msg -> msg) -> Html msg
+viewNote email handleKeyboard msg =
   let
     handleChange note =
-      UpdateEmailNote note
+      msg <| UpdateEmailNote note
+    onKeyDown =
+      E.on "keydown" (KeyboardNavigation.keyDecoder handleKeyboard)
   in
   H.input [ A.placeholder "Make a note about the email"
           , A.id "note"
@@ -165,6 +169,7 @@ viewNote email =
           , A.class "input"
           , A.class "is-medium"
           , onChange handleChange
+          , onKeyDown
           ]
           []
 
@@ -204,15 +209,18 @@ viewEmailContent email selected =
 
 
 
-view : Model -> List (Html Msg)
-view model =
+view : Model -> (KeyboardNavigation.Direction -> msg) -> (Msg -> msg) -> List (Html msg)
+view model handleKeyboard msg =
   case model of
     HasEmail { email, loading, content } ->
-      [viewEmailContent email content, viewNote email]
+      [ viewEmailContent email content |> Html.map msg
+      , viewNote email handleKeyboard msg
+      ]
 
     -- ASSUMEs that Failure case is handled higher up.
     _ ->
       [text "no email selected"]
+        |> List.map (Html.map msg)
 
 
 
