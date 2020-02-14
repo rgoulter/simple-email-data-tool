@@ -16,6 +16,11 @@ module Page
           { datetime: datetime, sender: sender[0..-2], subject: subject }
         end
       end
+
+      def select(datetime, sender, subject)
+        email = "#{datetime} #{sender}: #{subject}"
+        find(EMAILS_SELECTOR).select(email)
+      end
     end
   end
 end
