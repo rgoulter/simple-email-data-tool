@@ -1,5 +1,7 @@
 # n.b. see spec_helper for imports and constants
 
+require_relative 'lib/page/email_selection.rb'
+
 feature "fetching emails on page load" do
   include_context "logger"
   include_context "runs elm reactor"
@@ -31,14 +33,13 @@ feature "fetching emails on page load" do
       visit CLIENT_PATH
 
       # ASSERT
-      options = all('option')
-      options_text = options.map(&:text)
+      emails = Page::EmailSelection.emails
 
       expected_emails =
-        ["2019-01-01T12:00:00+0000 foo1@bar.com: Foo Bar",
-         "2019-01-01T12:01:00+0000 foo2@bar.com: Foo2 Bar",
-         "2019-01-03T12:02:00+0000 foo3@baz.com: Foo3 Bar"]
-      expect(options_text).to eql(expected_emails)
+        [{ datetime: "2019-01-01T12:00:00+0000", sender: "foo1@bar.com", subject: "Foo Bar" },
+         { datetime: "2019-01-01T12:01:00+0000", sender: "foo2@bar.com", subject: "Foo2 Bar" },
+         { datetime: "2019-01-03T12:02:00+0000", sender: "foo3@baz.com", subject: "Foo3 Bar" }]
+      expect(emails).to eql(expected_emails)
     end
   end
 
