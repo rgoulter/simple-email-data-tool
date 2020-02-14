@@ -44,7 +44,7 @@ init _ =
     (initEmail, _) = Ui.Email.init ()
   in
   ( { failure = Nothing, selection = initSelection, email = initEmail }
-  , Cmd.map EmailSelection initCmd
+  , Cmd.map EmailSelectionMsg initCmd
   )
 
 
@@ -54,15 +54,15 @@ init _ =
 
 
 type Msg
-  = EmailSelection Ui.EmailSelection.Msg
-  | Email Int Ui.Email.Msg
+  = EmailSelectionMsg Ui.EmailSelection.Msg
+  | EmailMsg Int Ui.Email.Msg
   | Noop
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Email index emailMsg ->
+    EmailMsg index emailMsg ->
       let
         (emailModel, emailCmd) = Ui.Email.update emailMsg model.email
       in
@@ -74,7 +74,7 @@ update msg model =
             | email = emailModel
             , failure = Nothing
             }
-          , Cmd.map (\c -> Email index c) emailCmd
+          , Cmd.map (\c -> EmailMsg index c) emailCmd
           )
 
         (Nothing, Just updatedEmail) ->
@@ -87,7 +87,7 @@ update msg model =
             , selection = updatedSelection
             , failure = Nothing
             }
-          , Cmd.map (\c -> Email index c) emailCmd
+          , Cmd.map (\c -> EmailMsg index c) emailCmd
           )
 
         (emailFailure, _) ->
@@ -95,11 +95,11 @@ update msg model =
             | email = emailModel
             , failure = emailFailure
             }
-          , Cmd.map (\c -> Email index c) emailCmd
+          , Cmd.map (\c -> EmailMsg index c) emailCmd
           )
 
 
-    EmailSelection selectionMsg ->
+    EmailSelectionMsg selectionMsg ->
       let
         (emailSelectionModel, selectionCmd) = Ui.EmailSelection.update selectionMsg model.selection
       in
@@ -120,7 +120,7 @@ update msg model =
               | selection = emailSelectionModel
               , failure = Nothing
               }
-            , Cmd.map EmailSelection selectionCmd
+            , Cmd.map EmailSelectionMsg selectionCmd
             )
 
           (selectionFailure, _) ->
@@ -128,7 +128,7 @@ update msg model =
               | selection = emailSelectionModel
               , failure = selectionFailure
               }
-            , Cmd.map EmailSelection selectionCmd
+            , Cmd.map EmailSelectionMsg selectionCmd
             )
 
     Noop -> (model, Cmd.none)
@@ -208,10 +208,10 @@ viewNonLoadingNonFailing model =
   in
     case Ui.EmailSelection.getSelection model.selection of
       Nothing ->
-        bulmaCentered ([Html.map EmailSelection selection] ++
+        bulmaCentered ([Html.map EmailSelectionMsg selection] ++
                        (List.map (\e -> Html.map (\_ -> Noop) e) email) ++
                        [summary])
       Just (index, _) ->
-        bulmaCentered ([Html.map EmailSelection selection] ++
-                       (List.map (\e -> Html.map (\msg -> Email index msg) e) email) ++
+        bulmaCentered ([Html.map EmailSelectionMsg selection] ++
+                       (List.map (\e -> Html.map (\msg -> EmailMsg index msg) e) email) ++
                        [summary])
