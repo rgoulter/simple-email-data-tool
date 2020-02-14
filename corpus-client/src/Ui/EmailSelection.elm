@@ -7,8 +7,8 @@ module Ui.EmailSelection exposing
   , getFailure
   , getSelection
   , isLoading
+  , setSelection
   , update
-  , updateEmail
   , view
   )
 
@@ -82,8 +82,8 @@ getSelection model =
     _ -> Nothing
 
 
-updateEmail : Model -> Int -> Email -> Model
-updateEmail model index updatedEmail =
+setSelection : Model -> Int -> Email -> Model
+setSelection model index updatedEmail =
   case model of
     Success emails ->
       Success { emails | emails = Array.set index updatedEmail emails.emails }

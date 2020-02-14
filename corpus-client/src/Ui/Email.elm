@@ -67,15 +67,13 @@ getEmail model =
     _ -> Nothing
 
 
-setEmail : Model -> Maybe Email -> Model
-setEmail model maybeEmail =
+setEmail : Model -> Email -> Model
+setEmail model email =
   -- Unhandled race condition: 'loading' an email, but set a new one
-  case maybeEmail of
-    Just email -> HasEmail { email = email
-                           , loading = False
-                           , content = defaultContentForEmail email
-                           }
-    Nothing -> NoEmail
+  HasEmail { email = email
+           , loading = False
+           , content = defaultContentForEmail email
+           }
 
 
 
