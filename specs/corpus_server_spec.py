@@ -11,7 +11,7 @@ from os.path import abspath, join
 from subprocess import PIPE, Popen
 from tempfile import TemporaryDirectory
 
-from mamba import context, description, it
+from mamba import context, description, it, fit
 from expects import contain, equal, expect
 from retrying import retry
 
@@ -116,6 +116,41 @@ with description('Corpus Server') as self:
 
         data = json.loads(response.text)
         expect(len(data["emails"])).to(equal(3))
+
+
+    with context('date filtering'):
+      # timestamps in happy are:
+      #   1546344000
+      #   1546344060
+      #   1546516920
+      with it('is able to return /api/emails?after='):
+        mbox_path = abspath("specs/happy.mbox")
+        with corpus_server(mbox_path=mbox_path) as server_info:
+          response = requests.get("http://localhost:5000/api/emails?after=1546345000")
+          expect(response.status_code).to(equal(200))
+
+          data = json.loads(response.text)
+          expect(len(data["emails"])).to(equal(1))
+
+
+      with it('is able to return /api/emails?before='):
+        mbox_path = abspath("specs/happy.mbox")
+        with corpus_server(mbox_path=mbox_path) as server_info:
+          response = requests.get("http://localhost:5000/api/emails?before=1546345000")
+          expect(response.status_code).to(equal(200))
+
+          data = json.loads(response.text)
+          expect(len(data["emails"])).to(equal(2))
+
+
+      with it('is able to return /api/emails?after=&before='):
+        mbox_path = abspath("specs/happy.mbox")
+        with corpus_server(mbox_path=mbox_path) as server_info:
+          response = requests.get("http://localhost:5000/api/emails?after=1546344001&before=1546345000")
+          expect(response.status_code).to(equal(200))
+
+          data = json.loads(response.text)
+          expect(len(data["emails"])).to(equal(1))
 
 
 
