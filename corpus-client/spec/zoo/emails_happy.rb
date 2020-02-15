@@ -1,3 +1,4 @@
+require 'date'
 require 'json'
 require 'sinatra'
 require 'sinatra/cross_origin'
@@ -22,38 +23,59 @@ Notes.email3 = ""
 
 get '/emails' do
   response['Access-Control-Allow-Origin'] = '*'
-  {
-    status: 'success',
-    emails: [
-      {
-        from: "foo1@bar.com",
-        timestamp: 1546344060,
-        datetime: "2019-01-01T12:00:00+0000",
-        subject: "Foo Bar",
-        plain: true,
-        html: false,
-        note: Notes.email1,
-      },
-      {
-        from: "foo2@bar.com",
-        datetime: "2019-01-01T12:01:00+0000",
-        timestamp: 1546344120,
-        subject: "Foo2 Bar",
-        plain: true,
-        html: true,
-        note: Notes.email2,
-      },
-      {
-        from: "foo3@baz.com",
-        datetime: "2019-01-03T12:02:00+0000",
-        timestamp: 1546516980,
-        subject: "Foo3 Bar",
-        plain: false,
-        html: true,
-        note: Notes.email3,
-      },
-    ]
-  }.to_json
+
+  # "1546387200" and "1546646399"
+  # after=1546387200&before=1546646399
+  if params['after'] == Date.new(2019, 1, 2).strftime('%s') &&
+     params['before'] == DateTime.new(2019, 1, 4, 23, 59, 59).strftime('%s')
+    {
+      status: 'success',
+      emails: [
+        {
+          from: "foo3@baz.com",
+          datetime: "2019-01-03T12:02:00+0000",
+          timestamp: 1546516980,
+          subject: "Foo3 Bar",
+          plain: false,
+          html: true,
+          note: Notes.email3,
+        },
+      ]
+    }.to_json
+  else
+    {
+      status: 'success',
+      emails: [
+        {
+          from: "foo1@bar.com",
+          timestamp: 1546344060,
+          datetime: "2019-01-01T12:00:00+0000",
+          subject: "Foo Bar",
+          plain: true,
+          html: false,
+          note: Notes.email1,
+        },
+        {
+          from: "foo2@bar.com",
+          datetime: "2019-01-01T12:01:00+0000",
+          timestamp: 1546344120,
+          subject: "Foo2 Bar",
+          plain: true,
+          html: true,
+          note: Notes.email2,
+        },
+        {
+          from: "foo3@baz.com",
+          datetime: "2019-01-03T12:02:00+0000",
+          timestamp: 1546516980,
+          subject: "Foo3 Bar",
+          plain: false,
+          html: true,
+          note: Notes.email3,
+        },
+      ]
+    }.to_json
+  end
 end
 
 get '/email/foo1@bar.com/1546344060/plain' do
