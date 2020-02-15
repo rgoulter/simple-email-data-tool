@@ -7,6 +7,7 @@ import Html.Attributes exposing (class)
 
 import KeyboardNavigation
 import Ui.Bulma exposing (bulmaCentered, bulmaDangerMessage, withStyle)
+import Ui.DateFilter
 import Ui.Email
 import Ui.EmailSelection
 import Ui.Summary exposing (viewSummary)
@@ -33,6 +34,7 @@ main =
 
 type alias Model
   = { failure : Maybe String
+    , dateFilter : Ui.DateFilter.Model
     , selection : Ui.EmailSelection.Model
     , email : Ui.Email.Model
     }
@@ -41,11 +43,19 @@ type alias Model
 init : () -> (Model, Cmd Msg)
 init _ =
   let
-    (initSelection, initCmd) = Ui.EmailSelection.init ()
+    (initDateFilter, initDateFilterCmd) = Ui.DateFilter.init ()
+    (initSelection, initSelectionCmd) = Ui.EmailSelection.init ()
     (initEmail, _) = Ui.Email.init ()
   in
-  ( { failure = Nothing, selection = initSelection, email = initEmail }
-  , Cmd.map EmailSelectionMsg initCmd
+  ( { failure = Nothing
+    , dateFilter = initDateFilter
+    , selection = initSelection
+    , email = initEmail
+    }
+  , Cmd.batch
+      [ Cmd.map DateFilterMsg initDateFilterCmd
+      , Cmd.map EmailSelectionMsg initSelectionCmd
+      ]
   )
 
 
@@ -55,7 +65,8 @@ init _ =
 
 
 type Msg
-  = EmailSelectionMsg Ui.EmailSelection.Msg
+  = DateFilterMsg Ui.DateFilter.Msg
+  | EmailSelectionMsg Ui.EmailSelection.Msg
   | EmailMsg Int Ui.Email.Msg
   | ChangeEmail KeyboardNavigation.Direction
   | Noop
@@ -90,6 +101,23 @@ update msg model =
         Nothing ->
           -- XXX: may want to clear email from Ui.Email
           (updatedModel, mainCmd)
+
+
+    DateFilterMsg dateFilterMsg ->
+      let
+        (dateFilter, dateFilterCmd) =
+          Ui.DateFilter.update dateFilterMsg model.dateFilter
+        -- The DateFilter range *might* have changed
+        dateFilterRange = Ui.DateFilter.getRange dateFilter
+        (emailSelection, emailSelectionCmd) =
+          Ui.EmailSelection.setDateFilter model.selection dateFilterRange
+      in
+        ( { model | dateFilter = dateFilter, selection = emailSelection }
+        , Cmd.batch
+            [ Cmd.map DateFilterMsg dateFilterCmd
+            , Cmd.map EmailSelectionMsg emailSelectionCmd
+            ]
+        )
 
 
     EmailMsg index emailMsg ->
@@ -192,6 +220,7 @@ viewErrorMessage message =
 viewLoading =
   let
     blankPage = viewNonLoadingNonFailing { failure = Nothing
+                                         , dateFilter = Ui.DateFilter.empty
                                          , selection = Ui.EmailSelection.empty
                                          , email = Ui.Email.empty
                                          }
@@ -212,6 +241,7 @@ viewLoading =
 
 viewNonLoadingNonFailing model =
   let
+    dateFilter = Ui.DateFilter.view model.dateFilter
     selection = Ui.EmailSelection.view model.selection
     handleKeyboard = ChangeEmail
     emailMsgToMsg =
@@ -221,6 +251,7 @@ viewNonLoadingNonFailing model =
     email = Ui.Email.view model.email handleKeyboard emailMsgToMsg
     summary = viewSummary (Ui.EmailSelection.getEmails model.selection)
   in
-    bulmaCentered ([Html.map EmailSelectionMsg selection] ++
+    bulmaCentered ([Html.map DateFilterMsg dateFilter] ++
+                   [Html.map EmailSelectionMsg selection] ++
                    email ++
                    [summary])

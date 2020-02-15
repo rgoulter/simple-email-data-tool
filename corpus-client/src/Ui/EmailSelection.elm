@@ -9,6 +9,7 @@ module Ui.EmailSelection exposing
   , isLoading
   , modelFromEmails
   , navigate
+  , setDateFilter
   , setSelection
   , update
   , view
@@ -30,28 +31,39 @@ import Http
 
 import KeyboardNavigation
 
+import Time
+
 
 
 
 -- MODEL
 
 
+type alias Filters =
+  { dateRange : Maybe (Time.Posix, Time.Posix)
+  }
+
+
 type alias Emails =
   { selected : Int
   , emails : Array Email
+  , filters : Filters
   }
 
 
 type Model
   = Failure String
-  | Loading
+  | Loading Filters
   | Empty
   | Success Emails
 
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Loading, getEmailsRequest)
+  let
+    initFilters = { dateRange = Nothing }
+  in
+  (Loading initFilters, getEmailsRequest initFilters)
 
 
 empty : Model
@@ -61,7 +73,7 @@ empty = Empty
 isLoading : Model -> Bool
 isLoading model =
   case model of
-    Loading -> True
+    Loading _ -> True
     _ -> False
 
 
@@ -92,8 +104,52 @@ setSelection model index updatedEmail =
   case model of
     Success emails ->
       Success { emails | emails = Array.set index updatedEmail emails.emails }
-
     _ -> model
+
+
+getFilterDateRange : Model -> Maybe (Time.Posix, Time.Posix)
+getFilterDateRange model =
+  case model of
+    Loading filters -> filters.dateRange
+    Success emails -> emails.filters.dateRange
+    _ -> Nothing
+
+
+setDateFilter : Model -> (Maybe (Time.Posix, Time.Posix)) -> (Model, Cmd Msg)
+setDateFilter model dateRange =
+  let
+    oldDateRange = getFilterDateRange model
+  in
+  {-
+     IMPL. NOTE:
+     Checking dateRange /= oldDateRange is b/c
+     I have Main's update call this setDateFilter function
+      on every DateFilterMsg;
+     DateFilterMsg is also used by the EDRP.
+     (And b/c of how Main handles Ui.EmailSelection's Loading,
+      this ends up thrashing the UI a lot and is functionally
+      unusable).
+
+     It might be better to try and have Ui.DateFilter have a
+      "DateFilterChanged" message.
+  -}
+  if dateRange /= oldDateRange then
+    let
+      updateFilters f = { f | dateRange = dateRange }
+      filters =
+        case model of
+          Loading oldFilters -> updateFilters oldFilters
+          Success emails -> updateFilters emails.filters
+          _ -> { dateRange = Nothing }
+      getEmailsCmd = getEmailsRequest filters
+    in
+    case model of
+      Loading _ -> (Loading filters, getEmailsCmd)
+      -- Bad UX? Wipes state on changing date range
+      Success _ -> (Loading filters, getEmailsCmd)
+      _ -> (model, Cmd.none)
+  else
+    (model, Cmd.none)
 
 
 -- Helper method for the Showcase.
@@ -102,7 +158,10 @@ modelFromEmails selected emails =
   if selected > Array.length emails then
     Empty
   else
-    Success { selected = selected, emails = emails }
+    let
+      filters = { dateRange = Nothing }
+    in
+    Success { selected = selected, filters = filters, emails = emails }
 
 
 
@@ -110,8 +169,8 @@ modelFromEmails selected emails =
 
 
 type Msg
-  = FetchEmails
-  | GotEmails (Result Http.Error (Array Email))
+  = FetchEmails Filters
+  | GotEmails Filters (Result Http.Error (Array Email))
   | Noop
   | SelectEmail Int
 
@@ -119,16 +178,18 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    FetchEmails ->
-      (Loading, getEmailsRequest)
+    FetchEmails filters ->
+      (Loading filters, getEmailsRequest filters)
 
-    GotEmails result ->
+    GotEmails filters result ->
       case result of
         Ok emails ->
           if Array.isEmpty emails then
             (Empty, Cmd.none)
           else
-            (Success { selected = 0, emails = emails }, Cmd.none)
+            ( Success { selected = 0, filters = filters, emails = emails }
+            , Cmd.none
+            )
 
         Err error ->
           let
@@ -153,12 +214,12 @@ update msg model =
 navigate : KeyboardNavigation.Direction -> Model -> (Model, Cmd Msg)
 navigate direction model =
   case model of
-    Success { emails, selected } ->
+    Success emails ->
       let
         newSelected =
           case direction of
-            KeyboardNavigation.Previous -> selected - 1
-            KeyboardNavigation.Next -> selected + 1
+            KeyboardNavigation.Previous -> emails.selected - 1
+            KeyboardNavigation.Next -> emails.selected + 1
         clamp x min max =
           if x < min then
             min
@@ -167,9 +228,9 @@ navigate direction model =
               max - 1
             else
               x
-        clampedSelected = clamp newSelected 0 (Array.length emails)
+        clampedSelected = clamp newSelected 0 (Array.length emails.emails)
       in
-        (Success { emails = emails, selected = clampedSelected }, Cmd.none)
+        (Success { emails | selected = clampedSelected }, Cmd.none)
     _ -> (model, Cmd.none)
 
 
@@ -210,9 +271,25 @@ view model =
 -- HTTP
 
 
-getEmailsRequest : Cmd Msg
-getEmailsRequest =
+filtersGetParams : Filters -> String
+filtersGetParams filters =
+  let
+    posixToStr p = String.fromInt ((Time.posixToMillis p) // 1000)
+    dateParams =
+      case filters.dateRange of
+        Nothing -> [""]
+        Just (start_ts, end_ts) ->
+          [("after=" ++ posixToStr start_ts), ("before=" ++ posixToStr end_ts)]
+    dateParamsStr =
+      String.join "&" dateParams
+  in
+    "?" ++ dateParamsStr
+
+
+
+getEmailsRequest : Filters -> Cmd Msg
+getEmailsRequest filters =
   Http.get
-    { url = "/api/emails"
-    , expect = Http.expectJson GotEmails emailsDecoder
+    { url = "/api/emails" ++ (filtersGetParams filters)
+    , expect = Http.expectJson (GotEmails filters) emailsDecoder
     }
