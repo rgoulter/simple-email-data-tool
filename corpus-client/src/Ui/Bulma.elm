@@ -49,6 +49,8 @@ withStyle : Html msg -> Html msg
 withStyle html =
   div []
   [ node "style" [type_ "text/css"]
-    [text "@import url(https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css)"]
+    [ text "@import url(https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css);"
+    , text "@import url(https://allo-media.github.io/elm-daterange-picker/style.css);"
+    ]
   , html
   ]

@@ -29,7 +29,7 @@ def sinatra_api(subpath):
     if (request.method == "PATCH"):
       r = requests.patch(forward_to, data=request.data)
     else:
-      r = requests.get(forward_to)
+      r = requests.get(forward_to + "?" + request.query_string.decode("utf-8"))
     return Response(
       r.text,
       status=r.status_code,
